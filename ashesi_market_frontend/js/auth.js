@@ -27,7 +27,16 @@ async function initCSRF() {
 
 // Check if user is logged in
 function isLoggedIn() {
-    return getAccessToken() !== null && localStorage.getItem('user') !== null;
+    const hasToken = getAccessToken() !== null;
+    const hasUser = localStorage.getItem('user') !== null;
+    
+    // If we have user data but no token, clear the user data
+    if (hasUser && !hasToken) {
+        localStorage.removeItem('user');
+        return false;
+    }
+    
+    return hasToken && hasUser;
 }
 
 // Get current user

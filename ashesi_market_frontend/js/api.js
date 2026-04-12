@@ -40,6 +40,24 @@ async function apiRequest(url, options = {}) {
         }
         
         if (!response.ok) {
+            // Handle 401 Unauthorized - token expired or invalid
+            if (response.status === 401) {
+                // Clear invalid tokens
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('user');
+                
+                // If this was an authenticated request, redirect to login
+                if (token && window.location.pathname !== '/login.html' && window.location.pathname !== '/register.html') {
+                    // Only redirect if user was trying to access protected content
+                    const protectedPaths = ['/profile.html', '/orders.html', '/sell.html', '/cart.html', '/profile-edit.html'];
+                    if (protectedPaths.some(path => window.location.pathname.includes(path))) {
+                        window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+                        return;
+                    }
+                }
+            }
+            
             // Create detailed error message
             let errorMessage = 'Request failed';
             
