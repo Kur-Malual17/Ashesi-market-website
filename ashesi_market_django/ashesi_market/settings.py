@@ -9,12 +9,17 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production')
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-temp-key-for-build-only-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+# Warn if using default secret key in production
+if not DEBUG and SECRET_KEY == 'django-insecure-temp-key-for-build-only-change-in-production':
+    import sys
+    print("WARNING: Using default SECRET_KEY in production! Set SECRET_KEY environment variable.", file=sys.stderr)
+
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,.railway.app,.vercel.app').split(',')
 
 # Application definition
 INSTALLED_APPS = [
@@ -153,14 +158,10 @@ REST_FRAMEWORK = {
 }
 
 # CORS Settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:8000",
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-    "http://127.0.0.1:5500",  # VS Code Live Server
-    "http://localhost:5500",  # VS Code Live Server
-]
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default="http://localhost:3000,http://localhost:8000,http://localhost:8080,http://127.0.0.1:8080,http://127.0.0.1:5500,http://localhost:5500,https://ashesi-market-website.vercel.app"
+).split(',')
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -177,23 +178,21 @@ CORS_ALLOW_HEADERS = [
 # Session Settings
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
 SESSION_COOKIE_HTTPONLY = False  # Allow JavaScript to read (for debugging)
-SESSION_COOKIE_SAMESITE = 'Lax'  # Lax works when both are on localhost
-SESSION_COOKIE_DOMAIN = None  # Allow localhost
-SESSION_COOKIE_SECURE = False  # False for HTTP
+SESSION_COOKIE_SAMESITE = config('SESSION_COOKIE_SAMESITE', default='Lax')
+SESSION_COOKIE_DOMAIN = config('SESSION_COOKIE_DOMAIN', default=None)
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
 SESSION_COOKIE_PATH = '/'  # Available on all paths
 SESSION_SAVE_EVERY_REQUEST = True  # Keep session alive
 
 # CSRF Settings
-CSRF_COOKIE_SAMESITE = 'Lax'  # Lax works when both are on localhost
+CSRF_COOKIE_SAMESITE = config('CSRF_COOKIE_SAMESITE', default='Lax')
 CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF token
-CSRF_COOKIE_DOMAIN = None  # Allow localhost
-CSRF_COOKIE_SECURE = False  # False for HTTP
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
-]
+CSRF_COOKIE_DOMAIN = config('CSRF_COOKIE_DOMAIN', default=None)
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default="http://localhost:8080,http://127.0.0.1:8080,http://127.0.0.1:5500,http://localhost:5500,https://ashesi-market-website.vercel.app"
+).split(',')
 
 # Security Settings
 SECURE_BROWSER_XSS_FILTER = True

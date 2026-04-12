@@ -1,0 +1,1 @@
+web: gunicorn ashesi_market.wsgi --log-file -
