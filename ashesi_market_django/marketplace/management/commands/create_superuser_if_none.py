@@ -26,23 +26,27 @@ class Command(BaseCommand):
 
         if not email or not password:
             self.stdout.write(
-                self.style.ERROR(
+                self.style.WARNING(
                     'DJANGO_SUPERUSER_EMAIL and DJANGO_SUPERUSER_PASSWORD '
-                    'environment variables must be set'
+                    'environment variables not set. Skipping superuser creation.'
                 )
             )
             return
 
         # Create superuser
         try:
+            # Generate username from email
+            username = email.split('@')[0]
+            
             user = User.objects.create_superuser(
                 email=email,
+                username=username,
                 password=password,
                 first_name=first_name,
                 last_name=last_name,
                 phone_whatsapp='0000000000',  # Default phone
-                year_group=2024,  # Default year
-                role='admin'
+                year_group='2024',  # Default year
+                role='both'  # Admin can be both buyer and seller
             )
             self.stdout.write(
                 self.style.SUCCESS(f'Superuser created successfully: {email}')
