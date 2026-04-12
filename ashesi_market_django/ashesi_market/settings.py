@@ -21,6 +21,22 @@ if not DEBUG and SECRET_KEY == 'django-insecure-temp-key-for-build-only-change-i
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,.railway.app,.vercel.app').split(',')
 
+# Add support for wildcard subdomains
+import re
+class WildcardAllowedHosts(list):
+    def __contains__(self, host):
+        # Check exact matches first
+        if super().__contains__(host):
+            return True
+        # Check wildcard patterns
+        for pattern in self:
+            if pattern.startswith('.'):
+                if host.endswith(pattern) or host == pattern[1:]:
+                    return True
+        return False
+
+ALLOWED_HOSTS = WildcardAllowedHosts(ALLOWED_HOSTS)
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
