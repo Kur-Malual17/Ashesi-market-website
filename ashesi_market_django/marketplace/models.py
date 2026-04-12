@@ -53,7 +53,7 @@ class User(AbstractUser):
         return f"{self.get_full_name()} ({self.email})"
     
     class Meta:
-        db_table = 'users'
+        db_table = 'market_users'
 
 
 class Category(models.Model):
@@ -70,7 +70,7 @@ class Category(models.Model):
         return self.name
     
     class Meta:
-        db_table = 'categories'
+        db_table = 'market_categories'
         verbose_name_plural = 'Categories'
 
 
@@ -107,7 +107,7 @@ class Product(models.Model):
         return img
     
     class Meta:
-        db_table = 'products'
+        db_table = 'market_products'
         ordering = ['-created_at']
 
 
@@ -122,7 +122,7 @@ class ProductImage(models.Model):
         return f"Image for {self.product.title}"
     
     class Meta:
-        db_table = 'product_images'
+        db_table = 'market_product_images'
 
 
 class Cart(models.Model):
@@ -142,7 +142,7 @@ class Cart(models.Model):
         return sum(item.subtotal for item in self.items.all())
     
     class Meta:
-        db_table = 'cart'
+        db_table = 'market_cart'
 
 
 
@@ -160,7 +160,7 @@ class CartItem(models.Model):
         return f"{self.quantity}x {self.product.title}"
     
     class Meta:
-        db_table = 'cart_items'
+        db_table = 'market_cart_items'
         unique_together = ['cart', 'product']
 
 
@@ -183,7 +183,7 @@ class Order(models.Model):
         return f"Order #{self.id} by {self.buyer.email}"
     
     class Meta:
-        db_table = 'orders'
+        db_table = 'market_orders'
         ordering = ['-created_at']
 
 
@@ -203,7 +203,7 @@ class OrderItem(models.Model):
         return f"{self.quantity}x {self.product.title} in Order #{self.order.id}"
     
     class Meta:
-        db_table = 'order_items'
+        db_table = 'market_order_items'
 
 
 class Review(models.Model):
@@ -219,5 +219,5 @@ class Review(models.Model):
         return f"{self.rating}★ review by {self.reviewer.email}"
     
     class Meta:
-        db_table = 'reviews'
+        db_table = 'market_reviews'
         ordering = ['-created_at']

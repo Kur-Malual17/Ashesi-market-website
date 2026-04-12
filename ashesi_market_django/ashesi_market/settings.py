@@ -2,6 +2,7 @@
 Django settings for ashesi_market project.
 """
 
+import os
 from pathlib import Path
 from decouple import config
 
@@ -90,15 +91,27 @@ TEMPLATES = [
 WSGI_APPLICATION = 'ashesi_market.wsgi.application'
 
 # Database
-# For development on Windows, using SQLite (no MySQL driver issues)
-# To use MySQL, install mysqlclient or PyMySQL and uncomment MySQL config below
+# Use PostgreSQL on Railway, SQLite for local development
+import dj_database_url
 
+# Default to SQLite for local development
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Override with DATABASE_URL if provided (Railway PostgreSQL)
+if 'DATABASE_URL' in os.environ:
+    DATABASES['default'] = dj_database_url.config(
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+    # Optional: Add table prefix to avoid conflicts with other apps
+    # DATABASES['default']['OPTIONS'] = {
+    #     'options': '-c search_path=ashesi_market,public'
+    # }
 
 # MySQL Configuration (uncomment when mysqlclient is installed)
 # DATABASES = {

@@ -43,15 +43,25 @@ def csrf_token_view(request):
 @permission_classes([AllowAny])
 def register_view(request):
     """User registration with JWT tokens"""
+    print(f"Registration attempt with data: {request.data}")  # Debug
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
-        user = serializer.save()
-        tokens = get_tokens_for_user(user)
-        return Response({
-            'user': UserProfileSerializer(user).data,
-            'tokens': tokens,
-            'message': 'Registration successful'
-        }, status=status.HTTP_201_CREATED)
+        try:
+            user = serializer.save()
+            print(f"User created successfully: {user.email}")  # Debug
+            tokens = get_tokens_for_user(user)
+            print(f"Tokens generated for user: {user.email}")  # Debug
+            return Response({
+                'user': UserProfileSerializer(user).data,
+                'tokens': tokens,
+                'message': 'Registration successful'
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            print(f"Error creating user: {str(e)}")  # Debug
+            return Response({
+                'error': f'Registration failed: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    print(f"Validation errors: {serializer.errors}")  # Debug
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

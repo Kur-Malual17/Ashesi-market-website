@@ -79,18 +79,39 @@
                     password: document.getElementById('password').value
                 };
                 
+                console.log('Attempting login for:', data.email);
+                
                 const response = await apiPost(API_ENDPOINTS.login, data);
+                
+                console.log('Login response:', response);
+                
+                // Check if we got tokens
+                if (!response.tokens || !response.tokens.access || !response.tokens.refresh) {
+                    throw new Error('Login succeeded but no tokens received');
+                }
                 
                 // Save user data and tokens
                 saveUser(response.user);
                 saveTokens(response.tokens);
                 
-                // Redirect
-                const urlParams = new URLSearchParams(window.location.search);
-                const redirect = urlParams.get('redirect') || 'index.html';
-                window.location.href = redirect;
+                console.log('User and tokens saved to localStorage');
+                
+                // Show success message
+                alertContainer.innerHTML = `
+                    <div class="alert alert-success">
+                        ${response.message || 'Login successful! Redirecting...'}
+                    </div>
+                `;
+                
+                // Redirect after a short delay
+                setTimeout(() => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirect = urlParams.get('redirect') || 'index.html';
+                    window.location.href = redirect;
+                }, 1000);
                 
             } catch (error) {
+                console.error('Login error:', error);
                 alertContainer.innerHTML = `
                     <div class="alert alert-error">
                         ${error.message || 'Invalid email or password.'}
