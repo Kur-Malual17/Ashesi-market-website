@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Frontend-Backend Connection Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        .test { margin: 15px 0; padding: 15px; background: #2d2d2d; border-radius: 5px; border-left: 4px solid #666; }
+        .pass { border-left-color: #4ec9b0; }
+        .fail { border-left-color: #f48771; }
+        .warn { border-left-color: #dcdcaa; }
+        button { padding: 12px 24px; margin: 10px 5px; cursor: pointer; background: #0e639c; color: white; border: none; border-radius: 5px; font-size: 14px; }
+        button:hover { background: #1177bb; }
+        pre { background: #1e1e1e; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        h1 { color: #4ec9b0; }
+        h2 { color: #dcdcaa; margin-top: 30px; }
+        .status { display: inline-block; padding: 3px 8px; border-radius: 3px; font-weight: bold; }
+        .status-ok { background: #4ec9b0; color: #000; }
+        .status-fail { background: #f48771; color: #000; }
+        .status-warn { background: #dcdcaa; color: #000; }
+    </style>
+</head>
+<body>
+    <h1>🔌 Frontend-Backend Connection Test</h1>
+    
+    <div>
+        <button onclick="runAllTests()">🧪 Run All Tests</button>
+        <button onclick="location.reload()">🔄 Refresh Page</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        async function runAllTests() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h2>Running tests...</h2>';
+            
+            const tests = [];
+            
+            // Test 1: Backend is running
+            console.log('Test 1: Checking if backend is running...');
+            try {
+                const resp = await fetch(`${API_BASE}/`, { method: 'GET' });
+                tests.push({
+                    name: 'Backend Server Running',
+                    pass: resp.status === 200,
+                    details: `Status: ${resp.status}`,
+                    critical: true
+                });
+            } catch (error) {
+                tests.push({
+                    name: 'Backend Server Running',
+                    pass: false,
+                    details: `ERROR: ${error.message}. Is Django running on port 8000?`,
+                    critical: true
+                });
+            }
+            
+            // Test 2: CORS is configured
+            console.log('Test 2: Checking CORS...');
+            try {
+                const resp = await fetch(`${API_BASE}/api/categories/`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                const corsHeader = resp.headers.get('Access-Control-Allow-Origin');
+                tests.push({
+                    name: 'CORS Configured',
+                    pass: corsHeader !== null || resp.status === 200,
+                    details: corsHeader ? `CORS header: ${corsHeader}` : 'CORS working (got response)',
+                    critical: true
+                });
+            } catch (error) {
+                tests.push({
+                    name: 'CORS Configured',
+                    pass: false,
+                    details: `CORS Error: ${error.message}. Check Django CORS settings.`,
+                    critical: true
+                });
+            }
+            
+            // Test 3: CSRF endpoint
+            console.log('Test 3: Checking CSRF endpoint...');
+            try {
+                const resp = await fetch(`${API_BASE}/api/csrf/`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                tests.push({
+                    name: 'CSRF Endpoint',
+                    pass: resp.status === 200,
+                    details: `Status: ${resp.status}`,
+                    critical: true
+                });
+            } catch (error) {
+                tests.push({
+                    name: 'CSRF Endpoint',
+                    pass: false,
+                    details: `Error: ${error.message}`,
+                    critical: true
+                });
+            }
+            
+            // Test 4: CSRF cookie is set
+            console.log('Test 4: Checking CSRF cookie...');
+            const csrfCookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+            tests.push({
+                name: 'CSRF Cookie Set',
+                pass: !!csrfCookie,
+                details: csrfCookie ? `Cookie: ${csrfCookie.substring(0, 30)}...` : 'No CSRF cookie found',
+                critical: true
+            });
+            
+            // Test 5: Session cookie check
+            console.log('Test 5: Checking session cookie...');
+            const sessionCookie = document.cookie.split('; ').find(row => row.startsWith('sessionid='));
+            tests.push({
+                name: 'Session Cookie (Login Status)',
+                pass: !!sessionCookie,
+                details: sessionCookie ? `✅ Logged in: ${sessionCookie.substring(0, 30)}...` : '❌ NOT LOGGED IN - You need to login!',
+                critical: false,
+                warning: !sessionCookie
+            });
+            
+            // Test 6: LocalStorage user data
+            console.log('Test 6: Checking localStorage...');
+            const localUser = localStorage.getItem('user');
+            tests.push({
+                name: 'LocalStorage User Data',
+                pass: !!localUser,
+                details: localUser ? `User: ${JSON.parse(localUser).name}` : 'No user data in localStorage',
+                critical: false
+            });
+            
+            // Test 7: Current user API (requires login)
+            console.log('Test 7: Testing authenticated endpoint...');
+            try {
+                const resp = await fetch(`${API_BASE}/api/auth/user/`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                tests.push({
+                    name: 'Authenticated API Call',
+                    pass: resp.status === 200,
+                    details: resp.status === 200 ? '✅ Authentication working!' : `❌ Status ${resp.status} - ${resp.status === 403 ? 'NOT LOGGED IN' : 'Error'}`,
+                    critical: false,
+                    warning: resp.status === 403
+                });
+            } catch (error) {
+                tests.push({
+                    name: 'Authenticated API Call',
+                    pass: false,
+                    details: `Error: ${error.message}`,
+                    critical: false
+                });
+            }
+            
+            // Test 8: Categories API (public)
+            console.log('Test 8: Testing public endpoint...');
+            try {
+                const resp = await fetch(`${API_BASE}/api/categories/`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                const categories = data.results || data;
+                tests.push({
+                    name: 'Public API (Categories)',
+                    pass: resp.status === 200 && Array.isArray(categories),
+                    details: `Found ${categories.length} categories`,
+                    critical: false
+                });
+            } catch (error) {
+                tests.push({
+                    name: 'Public API (Categories)',
+                    pass: false,
+                    details: `Error: ${error.message}`,
+                    critical: false
+                });
+            }
+            
+            // Test 9: Products API
+            console.log('Test 9: Testing products endpoint...');
+            try {
+                const resp = await fetch(`${API_BASE}/api/products/`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                const products = data.results || data;
+                tests.push({
+                    name: 'Products API',
+                    pass: resp.status === 200,
+                    details: `Found ${products.length} products`,
+                    critical: false
+                });
+            } catch (error) {
+                tests.push({
+                    name: 'Products API',
+                    pass: false,
+                    details: `Error: ${error.message}`,
+                    critical: false
+                });
+            }
+            
+            // Display results
+            let html = '<h2>📊 Test Results</h2>';
+            
+            const criticalTests = tests.filter(t => t.critical);
+            const criticalPassed = criticalTests.filter(t => t.pass).length;
+            const allPassed = tests.filter(t => t.pass).length;
+            
+            html += `<div class="test ${criticalPassed === criticalTests.length ? 'pass' : 'fail'}">`;
+            html += `<strong>Critical Tests:</strong> ${criticalPassed}/${criticalTests.length} passed<br>`;
+            html += `<strong>All Tests:</strong> ${allPassed}/${tests.length} passed`;
+            html += `</div>`;
+            
+            tests.forEach(test => {
+                const className = test.pass ? 'pass' : (test.warning ? 'warn' : 'fail');
+                const icon = test.pass ? '✅' : (test.warning ? '⚠️' : '❌');
+                const statusClass = test.pass ? 'status-ok' : (test.warning ? 'status-warn' : 'status-fail');
+                
+                html += `
+                    <div class="test ${className}">
+                        <strong>${icon} ${test.name}</strong>
+                        ${test.critical ? ' <span class="status status-fail">CRITICAL</span>' : ''}
+                        <br>
+                        ${test.details}
+                    </div>
+                `;
+            });
+            
+            // Diagnosis
+            html += '<h2>🔍 Diagnosis</h2>';
+            
+            if (criticalPassed < criticalTests.length) {
+                html += `
+                    <div class="test fail">
+                        <strong>❌ CRITICAL ISSUES FOUND</strong><br>
+                        The frontend cannot connect to the backend properly.<br><br>
+                        <strong>Fix:</strong><br>
+                        1. Make sure Django is running: <code>python manage.py runserver</code><br>
+                        2. Check Django is on port 8000<br>
+                        3. Check CORS settings in Django settings.py
+                    </div>
+                `;
+            } else if (!sessionCookie) {
+                html += `
+                    <div class="test warn">
+                        <strong>⚠️ YOU ARE NOT LOGGED IN</strong><br>
+                        The connection works, but you need to login.<br><br>
+                        <strong>Fix:</strong><br>
+                        1. <a href="simple-login-test.html" style="color: #4ec9b0;">Go to Login Test Page</a><br>
+                        2. Enter your email and password<br>
+                        3. Click "Login Now"<br>
+                        4. Come back here and run tests again
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="test pass">
+                        <strong>✅ EVERYTHING IS WORKING!</strong><br>
+                        Frontend and backend are properly connected.<br>
+                        You are logged in and can use all features.<br><br>
+                        <strong>You can now:</strong><br>
+                        • <a href="products.html" style="color: #4ec9b0;">Browse Products</a><br>
+                        • <a href="sell.html" style="color: #4ec9b0;">Add Products</a><br>
+                        • <a href="cart.html" style="color: #4ec9b0;">View Cart</a><br>
+                        • <a href="orders.html" style="color: #4ec9b0;">View Orders</a><br>
+                        • <a href="profile.html" style="color: #4ec9b0;">View Profile</a>
+                    </div>
+                `;
+            }
+            
+            // Debug info
+            html += '<h2>🐛 Debug Information</h2>';
+            html += '<div class="test">';
+            html += '<strong>Current URL:</strong><br>';
+            html += `<pre>${window.location.href}</pre>`;
+            html += '<strong>All Cookies:</strong><br>';
+            html += `<pre>${document.cookie || 'No cookies'}</pre>`;
+            html += '<strong>LocalStorage:</strong><br>';
+            html += `<pre>${localStorage.getItem('user') || 'No user data'}</pre>`;
+            html += '</div>';
+            
+            results.innerHTML = html;
+        }
+        
+        // Auto-run on load
+        window.onload = runAllTests;
+    </script>
+</body>
+</html>

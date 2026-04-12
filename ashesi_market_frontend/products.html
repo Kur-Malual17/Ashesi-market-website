@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Products — Ashesi Market</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .search-layout { display: grid; grid-template-columns: 220px 1fr; gap: 28px; align-items: start; }
+        .filters-card  { padding: 20px; position: sticky; top: 80px; }
+        .filters-card h3 { font-size: .95rem; font-weight: 600; margin-bottom: 14px; }
+        .filter-group { margin-bottom: 18px; }
+        .filter-group label { font-size: .82rem; font-weight: 500; display: block; margin-bottom: 6px; }
+        .filter-group select,
+        .filter-group input { width: 100%; padding: 7px 10px; border: 1.5px solid var(--c-border); border-radius: 7px; font-size: .85rem; background: var(--c-bg); }
+        @media (max-width: 768px) {
+            .search-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a class="brand" href="index.html">
+                <span class="brand-icon">🛍</span>
+                <span class="brand-text">Ashesi Market</span>
+            </a>
+
+            <form class="nav-search" onsubmit="event.preventDefault(); applyFilters();">
+                <input type="text" id="search-input" placeholder="Search products, sellers…">
+                <button type="submit">Search</button>
+            </form>
+
+            <div class="nav-actions">
+                <a class="nav-link" href="login.html" id="nav-login">Log in</a>
+                <a class="btn btn-sm" href="register.html" id="nav-register">Register</a>
+                <a class="nav-link" href="cart.html" id="nav-cart" style="display: none;">
+                    Cart <span class="badge" id="cart-badge" style="display: none;">0</span>
+                </a>
+                <a class="nav-link" href="orders.html" id="nav-orders" style="display: none;">Orders</a>
+                <a class="nav-link" href="profile.html" id="nav-profile" style="display: none;">Profile</a>
+                <a class="btn btn-sm" href="sell.html" id="nav-sell" style="display: none;">+ Sell</a>
+                <a class="nav-link" href="#" onclick="logout(); return false;" id="nav-logout" style="display: none;">Log out</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="search-layout">
+                <!-- Filters Sidebar -->
+                <div class="card filters-card">
+                    <h3>Filters</h3>
+                    
+                    <div class="filter-group">
+                        <label>Category</label>
+                        <select id="category-filter">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Condition</label>
+                        <select id="condition-filter">
+                            <option value="">All Conditions</option>
+                            <option value="new">New</option>
+                            <option value="like_new">Like New</option>
+                            <option value="good">Good</option>
+                            <option value="fair">Fair</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-primary w-full" onclick="applyFilters()">Apply Filters</button>
+                    <button class="btn btn-outline w-full mt-2" onclick="clearFilters()">Clear</button>
+                </div>
+                
+                <!-- Products Grid -->
+                <div>
+                    <div class="section-heading">
+                        <h2>All Products</h2>
+                        <span class="text-muted" id="product-count" style="font-size:.9rem;">Loading...</span>
+                    </div>
+                    
+                    <div id="products-container">
+                        <div class="text-center" style="padding: 40px 0;">
+                            <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--c-border); border-top-color: var(--c-accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; <span id="year"></span> Ashesi Market — Ashesi University Student Marketplace</p>
+        </div>
+    </footer>
+
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+        
+        let currentPage = 1;
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadCategoriesFilter();
+            await loadProducts();
+            
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('category')) {
+                document.getElementById('category-filter').value = urlParams.get('category');
+            }
+            if (urlParams.get('q')) {
+                document.getElementById('search-input').value = urlParams.get('q');
+            }
+            if (urlParams.get('category') || urlParams.get('q')) {
+                await loadProducts();
+            }
+        });
+        
+        async function loadCategoriesFilter() {
+            try {
+                const categories = await apiGet(API_ENDPOINTS.categories);
+                const select = document.getElementById('category-filter');
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+        
+        async function loadProducts(page = 1) {
+            try {
+                const search = document.getElementById('search-input').value;
+                const category = document.getElementById('category-filter').value;
+                const condition = document.getElementById('condition-filter').value;
+                
+                let url = `${API_ENDPOINTS.products}?page=${page}`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                if (category) url += `&category=${category}`;
+                if (condition) url += `&condition=${condition}`;
+                
+                const response = await apiGet(url);
+                const products = response.results || response;
+                const container = document.getElementById('products-container');
+                
+                if (products && products.length > 0) {
+                    container.innerHTML = '<div class="product-grid">' + 
+                        products.map(product => createProductCard(product)).join('') +
+                        '</div>';
+                    document.getElementById('product-count').textContent = `${products.length} products`;
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">🛒</div>
+                            <p>No products found</p>
+                        </div>
+                    `;
+                    document.getElementById('product-count').textContent = '0 products';
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('products-container').innerHTML = `
+                    <div class="alert alert-error">
+                        Failed to load products. Please try again later.
+                    </div>
+                `;
+            }
+        }
+        
+        function applyFilters() {
+            loadProducts(1);
+        }
+        
+        function clearFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('category-filter').value = '';
+            document.getElementById('condition-filter').value = '';
+            loadProducts(1);
+        }
+    </script>
+</body>
+</html>

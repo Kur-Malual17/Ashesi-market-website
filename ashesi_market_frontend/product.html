@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product — Ashesi Market</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .product-detail {
+            display: grid; grid-template-columns: 1fr 400px; gap: 32px; align-items: start;
+        }
+        .gallery { display: flex; flex-direction: column; gap: 12px; }
+        .gallery-main {
+            width: 100%; aspect-ratio: 4/3; border-radius: var(--radius-lg);
+            overflow: hidden; background: var(--c-bg); border: 1px solid var(--c-border);
+        }
+        .gallery-main img { width: 100%; height: 100%; object-fit: cover; }
+        .gallery-thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .gallery-thumb {
+            width: 80px; height: 80px; border-radius: 8px; overflow: hidden;
+            border: 2px solid var(--c-border); cursor: pointer; transition: border-color .15s;
+        }
+        .gallery-thumb.active { border-color: var(--c-accent); }
+        .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .product-info-card { padding: 24px; }
+        .product-info-card h1 { font-size: 1.6rem; font-weight: 700; margin: 12px 0; }
+        .product-price { font-size: 1.8rem; font-weight: 700; color: var(--c-accent); margin: 12px 0; }
+        .seller-mini {
+            display: flex; gap: 14px; align-items: center; padding: 16px;
+            text-decoration: none; color: inherit; transition: background .15s;
+        }
+        .seller-mini:hover { background: var(--c-bg); text-decoration: none; }
+        .seller-avatar {
+            width: 50px; height: 50px; border-radius: 50%; background: var(--c-accent);
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: 700; flex-shrink: 0;
+        }
+        .seller-mini-name { font-weight: 600; font-size: .95rem; }
+        .seller-mini-sub { font-size: .8rem; color: var(--c-muted); }
+        .qty-stepper {
+            display: flex; align-items: center; gap: 0; border: 1.5px solid var(--c-border);
+            border-radius: var(--radius); width: fit-content;
+        }
+        .qty-stepper button {
+            width: 40px; height: 40px; background: none; border: none;
+            font-size: 1.3rem; cursor: pointer; color: var(--c-text);
+        }
+        .qty-stepper input {
+            width: 50px; text-align: center; border: none; outline: none;
+            font-size: .95rem; font-family: var(--font-body); background: transparent;
+        }
+        @media (max-width: 768px) {
+            .product-detail { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a class="brand" href="index.html">
+                <span class="brand-icon">🛍</span>
+                <span class="brand-text">Ashesi Market</span>
+            </a>
+            <form class="nav-search" onsubmit="event.preventDefault(); searchProducts();">
+                <input type="text" id="search-input" placeholder="Search products, sellers…">
+                <button type="submit">Search</button>
+            </form>
+            <div class="nav-actions">
+                <a class="nav-link" href="login.html" id="nav-login">Log in</a>
+                <a class="btn btn-sm" href="register.html" id="nav-register">Register</a>
+                <a class="nav-link" href="cart.html" id="nav-cart" style="display: none;">
+                    Cart <span class="badge" id="cart-badge" style="display: none;">0</span>
+                </a>
+                <a class="nav-link" href="orders.html" id="nav-orders" style="display: none;">Orders</a>
+                <a class="nav-link" href="profile.html" id="nav-profile" style="display: none;">Profile</a>
+                <a class="btn btn-sm" href="sell.html" id="nav-sell" style="display: none;">+ Sell</a>
+                <a class="nav-link" href="#" onclick="logout(); return false;" id="nav-logout" style="display: none;">Log out</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div style="margin-bottom:10px;">
+                <a href="javascript:history.back()" style="font-size:.85rem;color:var(--c-muted);">← Back</a>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <div id="product-content">
+                <div class="text-center" style="padding: 60px 0;">
+                    <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--c-border); border-top-color: var(--c-accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; <span id="year"></span> Ashesi Market — Ashesi University Student Marketplace</p>
+        </div>
+    </footer>
+
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        if (!productId) {
+            window.location.href = 'products.html';
+        }
+
+        let product = null;
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (isLoggedIn()) {
+                try {
+                    currentUser = await apiGet(API_ENDPOINTS.currentUser);
+                } catch (error) {
+                    console.error('Error loading user:', error);
+                }
+            }
+            await loadProduct();
+        });
+
+        async function loadProduct() {
+            try {
+                console.log('Loading product ID:', productId);
+                product = await apiGet(API_ENDPOINTS.productDetail(productId));
+                console.log('Product loaded:', product);
+                renderProduct();
+            } catch (error) {
+                console.error('Error loading product:', error);
+                console.error('Error details:', error.message, error.stack);
+                document.getElementById('product-content').innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>Product not found.</strong><br>
+                        <small>Error: ${error.message}</small>
+                    </div>
+                    <a href="products.html" class="btn btn-primary">Browse Products</a>
+                `;
+            }
+        }
+
+        function renderProduct() {
+            console.log('Rendering product:', product);
+            
+            const images = product.images || [];
+            const mainImage = images.length > 0 ? images[0].image : null;
+            
+            // Safely get seller name
+            const sellerName = product.seller?.name || 'Unknown';
+            const sellerInitials = sellerName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            const rating = product.seller?.avg_rating || 0;
+            const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
+            
+            // Get category name (nested object)
+            const categoryName = product.category?.name || product.category_name || 'Uncategorized';
+            
+            const waMsg = `Hi ${sellerName}! I'm interested in your listing: ${product.title} (GH₵${parseFloat(product.price).toFixed(2)}) on Ashesi Market.`;
+            const waUrl = product.seller?.phone_whatsapp ? generateWhatsAppURL(product.seller.phone_whatsapp, waMsg) : null;
+
+            const isOwnProduct = currentUser && product.seller && currentUser.id === product.seller.id;
+
+            document.getElementById('product-content').innerHTML = `
+                <div class="product-detail">
+                    <!-- Gallery -->
+                    <div class="gallery">
+                        <div class="gallery-main">
+                            ${mainImage ? 
+                                `<img id="main-product-img" src="${mainImage}" alt="${product.title}">` :
+                                '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:4rem;background:var(--c-bg)">📦</div>'
+                            }
+                        </div>
+                        ${images.length > 1 ? `
+                            <div class="gallery-thumbs">
+                                ${images.map((img, i) => `
+                                    <div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="changeImage('${img.image}', this)">
+                                        <img src="${img.image}" alt="">
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Info -->
+                    <div>
+                        <div class="card product-info-card">
+                            <div class="flex gap-2" style="flex-wrap:wrap;">
+                                <span class="pill pill-category">${categoryName}</span>
+                                <span class="pill pill-condition">${product.condition.replace('_', ' ')}</span>
+                                ${!product.is_available ? '<span class="pill" style="background:#FEE;color:#C00;">Out of Stock</span>' : ''}
+                            </div>
+
+                            <h1>${product.title}</h1>
+                            <div class="product-price">GH₵ ${parseFloat(product.price).toFixed(2)}</div>
+
+                            ${product.location ? `<div class="text-muted" style="font-size:.88rem;">📍 ${product.location}</div>` : ''}
+                            
+                            <div style="font-size:.88rem;color:var(--c-muted);">
+                                ${product.quantity} left in stock
+                            </div>
+
+                            ${!isOwnProduct && isLoggedIn() && product.is_available && product.quantity > 0 ? `
+                                <form onsubmit="addToCart(event)" style="margin-top:16px;">
+                                    <div class="flex gap-2 items-center">
+                                        <div class="qty-stepper">
+                                            <button type="button" onclick="changeQty(-1)">−</button>
+                                            <input type="number" id="quantity" value="1" min="1" max="${product.quantity}" readonly>
+                                            <button type="button" onclick="changeQty(1)">+</button>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Add to Cart</button>
+                                    </div>
+                                </form>
+                            ` : !isLoggedIn() ? `
+                                <a href="login.html?redirect=product.html?id=${productId}" class="btn btn-primary" style="margin-top:16px;">Log in to Buy</a>
+                            ` : (!product.is_available || product.quantity === 0) ? `
+                                <div class="alert alert-info" style="margin-top:16px;">This product is currently unavailable.</div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Seller mini card -->
+                        <a href="profile.html?id=${product.seller.id}" class="seller-mini card mt-3" style="display:flex;margin-top:16px;">
+                            <div class="seller-avatar">${sellerInitials}</div>
+                            <div style="flex:1;">
+                                <div class="seller-mini-name">${product.seller.name}</div>
+                                <div class="seller-mini-sub">
+                                    ${rating > 0 ? `${stars} ${rating.toFixed(1)} (${product.seller.review_count || 0} reviews)` : 'No reviews yet'}
+                                    ${product.seller.year_group ? ` · ${product.seller.year_group}` : ''}
+                                </div>
+                            </div>
+                            <span style="color:var(--c-muted);font-size:.85rem;align-self:center;">View →</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="card" style="padding:24px;margin-top:28px;">
+                    <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px;">Description</h2>
+                    <div style="white-space:pre-wrap;line-height:1.7;">${product.description}</div>
+                </div>
+            `;
+        }
+
+        function changeImage(src, thumb) {
+            document.getElementById('main-product-img').src = src;
+            document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+        }
+
+        function changeQty(delta) {
+            const input = document.getElementById('quantity');
+            const newVal = parseInt(input.value) + delta;
+            if (newVal >= 1 && newVal <= product.quantity) {
+                input.value = newVal;
+            }
+        }
+
+        async function addToCart(event) {
+            event.preventDefault();
+            
+            const quantity = parseInt(document.getElementById('quantity').value);
+            
+            try {
+                await apiPost(API_ENDPOINTS.cartAdd, {
+                    product_id: product.id,
+                    quantity: quantity
+                });
+                
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-success">Added to cart! <a href="cart.html" style="color:inherit;text-decoration:underline;">View cart</a></div>
+                `;
+                
+                updateCartBadge();
+                
+                setTimeout(() => {
+                    document.getElementById('alert-container').innerHTML = '';
+                }, 3000);
+            } catch (error) {
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-error">${error.message || 'Failed to add to cart'}</div>
+                `;
+            }
+        }
+
+        function generateWhatsAppURL(phone, message) {
+            let cleanPhone = phone.replace(/\D/g, '');
+            if (cleanPhone.length === 10 && cleanPhone[0] === '0') {
+                cleanPhone = '233' + cleanPhone.substring(1);
+            }
+            return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+        }
+
+        function searchProducts() {
+            const query = document.getElementById('search-input').value;
+            if (query) {
+                window.location.href = `products.html?q=${encodeURIComponent(query)}`;
+            }
+        }
+    </script>
+</body>
+</html>

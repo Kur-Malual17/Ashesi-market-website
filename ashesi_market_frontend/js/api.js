@@ -1,0 +1,256 @@
+// API Helper Functions
+
+// Get CSRF token from cookie
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Generic API request function
+async function apiRequest(url, options = {}) {
+    const defaultOptions = {
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    };
+    
+    const config = { ...defaultOptions, ...options };
+    
+    // Add CSRF token for non-GET requests
+    if (options.method && options.method !== 'GET') {
+        const csrfToken = getCookie('csrftoken');
+        if (csrfToken) {
+            config.headers['X-CSRFToken'] = csrfToken;
+        }
+    }
+    
+    // Merge headers
+    if (options.headers) {
+        config.headers = { ...defaultOptions.headers, ...options.headers };
+    }
+    
+    try {
+        const response = await fetch(url, config);
+        
+        // Handle different response types
+        const contentType = response.headers.get('content-type');
+        let data;
+        
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            data = await response.text();
+        }
+        
+        if (!response.ok) {
+            // Create detailed error message
+            let errorMessage = 'Request failed';
+            
+            if (typeof data === 'object') {
+                // Django validation errors
+                if (data.error) {
+                    errorMessage = data.error;
+                } else if (data.detail) {
+                    errorMessage = data.detail;
+                } else {
+                    // Field-specific errors
+                    const errors = [];
+                    for (const [field, messages] of Object.entries(data)) {
+                        if (Array.isArray(messages)) {
+                            errors.push(`${field}: ${messages.join(', ')}`);
+                        } else {
+                            errors.push(`${field}: ${messages}`);
+                        }
+                    }
+                    if (errors.length > 0) {
+                        errorMessage = errors.join('; ');
+                    }
+                }
+            } else if (typeof data === 'string') {
+                errorMessage = data;
+            }
+            
+            console.error('API Error Response:', data);
+            throw new Error(errorMessage);
+        }
+        
+        return data;
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+}
+
+// GET request
+async function apiGet(url) {
+    return apiRequest(url, { method: 'GET' });
+}
+
+// POST request
+async function apiPost(url, data) {
+    return apiRequest(url, {
+        method: 'POST',
+        body: JSON.stringify(data)
+    });
+}
+
+// PUT request
+async function apiPut(url, data) {
+    return apiRequest(url, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    });
+}
+
+// DELETE request
+async function apiDelete(url) {
+    return apiRequest(url, { method: 'DELETE' });
+}
+
+// POST with FormData (for file uploads)
+async function apiPostFormData(url, formData) {
+    const csrfToken = getCookie('csrftoken');
+    const headers = {};
+    if (csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
+    }
+    
+    return apiRequest(url, {
+        method: 'POST',
+        body: formData,
+        headers: headers // Let browser set Content-Type for FormData, but include CSRF
+    });
+}
+
+// Show loading spinner
+function showLoading() {
+    const spinner = document.createElement('div');
+    spinner.id = 'loading-spinner';
+    spinner.className = 'spinner-overlay';
+    spinner.innerHTML = `
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    `;
+    document.body.appendChild(spinner);
+}
+
+// Hide loading spinner
+function hideLoading() {
+    const spinner = document.getElementById('loading-spinner');
+    if (spinner) {
+        spinner.remove();
+    }
+}
+
+// Show alert message
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show alert-floating`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Format price
+function formatPrice(price) {
+    return `GH₵ ${parseFloat(price).toFixed(2)}`;
+}
+
+// Format date
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+// Get condition badge class
+function getConditionBadge(condition) {
+    const badges = {
+        'new': 'bg-success',
+        'like_new': 'bg-info',
+        'good': 'bg-primary',
+        'fair': 'bg-warning'
+    };
+    return badges[condition] || 'bg-secondary';
+}
+
+// Get condition label
+function getConditionLabel(condition) {
+    const labels = {
+        'new': 'New',
+        'like_new': 'Like New',
+        'good': 'Good',
+        'fair': 'Fair'
+    };
+    return labels[condition] || condition;
+}
+
+// Get status badge class
+function getStatusBadge(status) {
+    const badges = {
+        'pending': 'bg-warning',
+        'confirmed': 'bg-info',
+        'completed': 'bg-success',
+        'cancelled': 'bg-danger'
+    };
+    return badges[status] || 'bg-secondary';
+}
+
+// Generate star rating HTML
+function generateStarRating(rating, maxStars = 5) {
+    let html = '<span class="star-rating">';
+    for (let i = 1; i <= maxStars; i++) {
+        if (i <= rating) {
+            html += '<i class="bi bi-star-fill"></i>';
+        } else {
+            html += '<i class="bi bi-star"></i>';
+        }
+    }
+    html += '</span>';
+    return html;
+}
+
+// Get user initials for avatar
+function getUserInitials(name) {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+}
+
+// Generate WhatsApp URL
+function generateWhatsAppURL(phone, message) {
+    // Remove non-digits
+    let cleanPhone = phone.replace(/\D/g, '');
+    
+    // Add Ghana country code if needed
+    if (cleanPhone.length === 10 && cleanPhone[0] === '0') {
+        cleanPhone = '233' + cleanPhone.substring(1);
+    }
+    
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+}

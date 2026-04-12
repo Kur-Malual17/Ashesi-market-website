@@ -1,0 +1,66 @@
+[
+  {
+    "model": "marketplace.category",
+    "pk": 1,
+    "fields": {
+      "name": "Food & Drinks",
+      "slug": "food-drinks"
+    }
+  },
+  {
+    "model": "marketplace.category",
+    "pk": 2,
+    "fields": {
+      "name": "Electronics",
+      "slug": "electronics"
+    }
+  },
+  {
+    "model": "marketplace.category",
+    "pk": 3,
+    "fields": {
+      "name": "Clothing",
+      "slug": "clothing"
+    }
+  },
+  {
+    "model": "marketplace.category",
+    "pk": 4,
+    "fields": {
+      "name": "Books & Notes",
+      "slug": "books-notes"
+    }
+  },
+  {
+    "model": "marketplace.category",
+    "pk": 5,
+    "fields": {
+      "name": "Services",
+      "slug": "services"
+    }
+  },
+  {
+    "model": "marketplace.category",
+    "pk": 6,
+    "fields": {
+      "name": "Accessories",
+      "slug": "accessories"
+    }
+  },
+  {
+    "model": "marketplace.category",
+    "pk": 7,
+    "fields": {
+      "name": "Home & Living",
+      "slug": "home-living"
+    }
+  },
+  {
+    "model": "marketplace.category",
+    "pk": 8,
+    "fields": {
+      "name": "Other",
+      "slug": "other"
+    }
+  }
+]

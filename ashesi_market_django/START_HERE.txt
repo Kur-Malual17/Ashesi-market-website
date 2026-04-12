@@ -1,0 +1,88 @@
+================================================================================
+                    ASHESI MARKET DJANGO - START HERE
+================================================================================
+
+GOOD NEWS! I've fixed the MySQL driver issue. The project now uses SQLite 
+for development (no database setup needed on Windows).
+
+================================================================================
+                         QUICK START (3 STEPS)
+================================================================================
+
+1. CLOSE ALL TERMINALS
+   - Press Ctrl+C in any terminal running Django
+   - Close all PowerShell/CMD windows
+
+2. DELETE THE DATABASE FILE (if it exists)
+   - In File Explorer, delete: db.sqlite3
+   - Or run: del db.sqlite3
+
+3. RUN THESE COMMANDS:
+
+   python manage.py migrate
+   python manage.py loaddata categories
+   python manage.py createsuperuser
+   python manage.py runserver
+
+4. VISIT: http://localhost:8000
+
+================================================================================
+                         OR USE THE RESET SCRIPT
+================================================================================
+
+Just double-click: reset_db.bat
+
+This will automatically:
+- Delete the old database
+- Create a new one
+- Load categories
+- Prompt you to create admin user
+
+================================================================================
+                              WHAT'S CHANGED?
+================================================================================
+
+✓ No MySQL needed for development
+✓ SQLite works out of the box on Windows
+✓ No driver installation issues
+✓ Easy to reset (just delete db.sqlite3)
+✓ Can switch to MySQL later for production
+
+================================================================================
+                            TROUBLESHOOTING
+================================================================================
+
+Problem: "File is being used by another process"
+Solution: Close all terminals and try again
+
+Problem: "Migration dependency error"
+Solution: Delete db.sqlite3 and run migrations again
+
+Problem: "python is not recognized"
+Solution: Use 'py' instead of 'python'
+
+================================================================================
+                              DOCUMENTATION
+================================================================================
+
+QUICK_FIX.md         - Detailed fix instructions
+WINDOWS_SETUP.md     - Windows-specific setup guide
+README.md            - Main documentation
+QUICKSTART.md        - 5-minute setup guide
+MIGRATION_GUIDE.md   - PHP to Django conversion details
+
+================================================================================
+                              NEXT STEPS
+================================================================================
+
+After setup:
+1. Login to admin: http://localhost:8000/admin
+2. Create test products
+3. Test the API: http://localhost:8000/api/
+4. Read the documentation
+
+================================================================================
+
+Questions? Check QUICK_FIX.md for detailed instructions.
+
+================================================================================

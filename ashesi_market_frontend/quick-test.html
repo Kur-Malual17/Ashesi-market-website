@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quick Test - Products</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .section { background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        .product { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; border: 1px solid #ddd; }
+        .success { background: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        pre { background: #fff; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Quick Test - Products & Authentication</h1>
+    
+    <div class="section">
+        <h2>1. Check Login Status</h2>
+        <button onclick="checkLogin()">Check If Logged In</button>
+        <div id="login-status"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. View Products from Admin</h2>
+        <button onclick="loadProducts()">Load All Products</button>
+        <div id="products-list"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. Add Test Product (Frontend)</h2>
+        <button onclick="addTestProduct()">Add Test Product via API</button>
+        <div id="add-result"></div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    
+    <script>
+        async function checkLogin() {
+            const div = document.getElementById('login-status');
+            div.innerHTML = '<p>Checking...</p>';
+            
+            try {
+                // First get CSRF token
+                await fetch('http://localhost:8000/api/csrf/', { credentials: 'include' });
+                
+                // Then check user
+                const response = await fetch('http://localhost:8000/api/auth/user/', {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    div.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Logged In!</h3>
+                            <p><strong>Name:</strong> ${user.name}</p>
+                            <p><strong>Email:</strong> ${user.email}</p>
+                            <p><strong>Role:</strong> ${user.role}</p>
+                            <p>You can now add products!</p>
+                        </div>
+                    `;
+                } else {
+                    const error = await response.json();
+                    div.innerHTML = `
+                        <div class="error">
+                            <h3>❌ Not Logged In</h3>
+                            <p>${error.detail || 'Please login first'}</p>
+                            <a href="login.html">Go to Login Page</a>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                div.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadProducts() {
+            const div = document.getElementById('products-list');
+            div.innerHTML = '<p>Loading products...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/products/', {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                const products = data.results || data;
+                
+                if (products.length === 0) {
+                    div.innerHTML = `
+                        <div class="error">
+                            <p>No products found!</p>
+                            <p>Products you add in Django admin should appear here.</p>
+                            <p>Try adding a test product using the button below.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `<div class="success"><p>Found ${products.length} products:</p></div>`;
+                products.forEach(p => {
+                    html += `
+                        <div class="product">
+                            <h4>${p.title}</h4>
+                            <p><strong>Price:</strong> GH₵ ${p.price}</p>
+                            <p><strong>Category:</strong> ${p.category_name}</p>
+                            <p><strong>Seller:</strong> ${p.seller_name}</p>
+                            <p><strong>Available:</strong> ${p.is_available ? 'Yes' : 'No'}</p>
+                            ${p.primary_image ? `<img src="${p.primary_image}" style="max-width: 200px; border-radius: 5px;">` : ''}
+                        </div>
+                    `;
+                });
+                
+                div.innerHTML = html;
+            } catch (error) {
+                div.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Error Loading Products</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function addTestProduct() {
+            const div = document.getElementById('add-result');
+            div.innerHTML = '<p>Adding product...</p>';
+            
+            try {
+                // Get CSRF token first
+                await fetch('http://localhost:8000/api/csrf/', { credentials: 'include' });
+                
+                // Get CSRF token from cookie
+                const csrfToken = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('csrftoken='))
+                    ?.split('=')[1];
+                
+                if (!csrfToken) {
+                    throw new Error('No CSRF token found. Please refresh and try again.');
+                }
+                
+                // Create test product
+                const productData = {
+                    title: 'Test Product ' + Date.now(),
+                    description: 'This is a test product created from the frontend',
+                    price: 50.00,
+                    quantity: 5,
+                    category: 1, // Assuming category 1 exists
+                    condition: 'good',
+                    location: 'Main Campus',
+                    is_available: true
+                };
+                
+                const response = await fetch('http://localhost:8000/api/products/', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(productData)
+                });
+                
+                if (response.ok) {
+                    const product = await response.json();
+                    div.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Product Added Successfully!</h3>
+                            <p><strong>ID:</strong> ${product.id}</p>
+                            <p><strong>Title:</strong> ${product.title}</p>
+                            <p><strong>Price:</strong> GH₵ ${product.price}</p>
+                            <p>Now reload products to see it in the list!</p>
+                        </div>
+                        <pre>${JSON.stringify(product, null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.json();
+                    div.innerHTML = `
+                        <div class="error">
+                            <h3>❌ Failed to Add Product</h3>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <pre>${JSON.stringify(error, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                div.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-check login on load
+        window.onload = () => {
+            checkLogin();
+            loadProducts();
+        };
+    </script>
+</body>
+</html>

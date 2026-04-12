@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In — Ashesi Market</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a class="brand" href="index.html">
+                <span class="brand-icon">🛍</span>
+                <span class="brand-text">Ashesi Market</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="card form-card">
+                <div class="page-header" style="margin-bottom:24px;">
+                    <h1>Log In</h1>
+                    <p>Welcome back to Ashesi Market</p>
+                </div>
+
+                <div id="alert-container"></div>
+
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required autofocus>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-full">
+                        <span id="btn-text">Log In</span>
+                    </button>
+
+                    <p class="text-center mt-3" style="font-size:.88rem;">
+                        Don't have an account? <a href="register.html">Register</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; <span id="year"></span> Ashesi Market — Ashesi University Student Marketplace</p>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+        
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btnText = document.getElementById('btn-text');
+            const alertContainer = document.getElementById('alert-container');
+            
+            btnText.textContent = 'Logging in...';
+            alertContainer.innerHTML = '';
+            
+            try {
+                const data = {
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value
+                };
+                
+                const response = await apiPost(API_ENDPOINTS.login, data);
+                
+                // Save user data
+                saveUser(response.user);
+                
+                // Redirect
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirect = urlParams.get('redirect') || 'index.html';
+                window.location.href = redirect;
+                
+            } catch (error) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-error">
+                        ${error.message || 'Invalid email or password.'}
+                    </div>
+                `;
+                btnText.textContent = 'Log In';
+            }
+        });
+    </script>
+</body>
+</html>

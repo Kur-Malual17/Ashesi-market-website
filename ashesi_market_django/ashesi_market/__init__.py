@@ -1,0 +1,1 @@
+# Ashesi Market Django Project

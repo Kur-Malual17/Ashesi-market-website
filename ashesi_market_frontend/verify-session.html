@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Session</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+        .box { background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0; border: 2px solid #dee2e6; }
+        .success { background: #d4edda; border-color: #28a745; }
+        .error { background: #f8d7da; border-color: #dc3545; }
+        button { padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        pre { background: white; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Session Verification</h1>
+    
+    <button onclick="checkSession()">Check Session Now</button>
+    <button onclick="testAPI()">Test API Call</button>
+    <button onclick="showCookies()">Show All Cookies</button>
+    
+    <div id="result"></div>
+
+    <script>
+        async function checkSession() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<div class="box">Checking...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/auth/user/', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    result.innerHTML = `
+                        <div class="box success">
+                            <h2>✅ Session is ACTIVE!</h2>
+                            <p><strong>Name:</strong> ${data.name}</p>
+                            <p><strong>Email:</strong> ${data.email}</p>
+                            <p><strong>Role:</strong> ${data.role}</p>
+                            <p>All authenticated pages should work!</p>
+                        </div>
+                    `;
+                } else {
+                    const error = await response.json();
+                    result.innerHTML = `
+                        <div class="box error">
+                            <h2>❌ Session is NOT active</h2>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Error:</strong> ${error.detail || error.error || 'Unknown error'}</p>
+                            <p>You need to login again!</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="box error">
+                        <h2>❌ Error</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testAPI() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<div class="box">Testing API...</div>';
+            
+            const tests = [];
+            
+            // Test 1: Categories (public)
+            try {
+                const resp = await fetch('http://localhost:8000/api/categories/', {
+                    credentials: 'include'
+                });
+                tests.push({ name: 'Categories (public)', status: resp.status, ok: resp.ok });
+            } catch (e) {
+                tests.push({ name: 'Categories (public)', status: 'ERROR', ok: false, error: e.message });
+            }
+            
+            // Test 2: Cart (authenticated)
+            try {
+                const resp = await fetch('http://localhost:8000/api/cart/', {
+                    credentials: 'include'
+                });
+                tests.push({ name: 'Cart (authenticated)', status: resp.status, ok: resp.ok });
+            } catch (e) {
+                tests.push({ name: 'Cart (authenticated)', status: 'ERROR', ok: false, error: e.message });
+            }
+            
+            // Test 3: Orders (authenticated)
+            try {
+                const resp = await fetch('http://localhost:8000/api/orders/', {
+                    credentials: 'include'
+                });
+                tests.push({ name: 'Orders (authenticated)', status: resp.status, ok: resp.ok });
+            } catch (e) {
+                tests.push({ name: 'Orders (authenticated)', status: 'ERROR', ok: false, error: e.message });
+            }
+            
+            let html = '<div class="box"><h2>API Test Results:</h2>';
+            tests.forEach(test => {
+                const icon = test.ok ? '✅' : '❌';
+                html += `<p>${icon} <strong>${test.name}:</strong> ${test.status} ${test.error || ''}</p>`;
+            });
+            html += '</div>';
+            
+            result.innerHTML = html;
+        }
+        
+        function showCookies() {
+            const result = document.getElementById('result');
+            const cookies = document.cookie;
+            
+            let html = '<div class="box"><h2>All Cookies:</h2>';
+            
+            if (!cookies) {
+                html += '<p>❌ No cookies found!</p>';
+            } else {
+                const cookieArray = cookies.split('; ');
+                cookieArray.forEach(cookie => {
+                    const [name, value] = cookie.split('=');
+                    const isImportant = name === 'sessionid' || name === 'csrftoken';
+                    html += `<p ${isImportant ? 'style="font-weight:bold;color:#28a745;"' : ''}>${name}: ${value.substring(0, 30)}...</p>`;
+                });
+                
+                const hasSession = cookies.includes('sessionid');
+                const hasCsrf = cookies.includes('csrftoken');
+                
+                html += '<hr>';
+                html += `<p><strong>Session Cookie:</strong> ${hasSession ? '✅ Present' : '❌ Missing'}</p>`;
+                html += `<p><strong>CSRF Token:</strong> ${hasCsrf ? '✅ Present' : '❌ Missing'}</p>`;
+            }
+            
+            html += '</div>';
+            result.innerHTML = html;
+        }
+        
+        // Auto-check on load
+        window.onload = checkSession;
+    </script>
+</body>
+</html>

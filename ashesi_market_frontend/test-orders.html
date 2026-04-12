@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Orders API</title>
+</head>
+<body>
+    <h1>Testing Orders API</h1>
+    <div id="status">Loading...</div>
+    <pre id="output"></pre>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        async function test() {
+            const statusDiv = document.getElementById('status');
+            const outputDiv = document.getElementById('output');
+            
+            try {
+                // Check if logged in
+                if (!isLoggedIn()) {
+                    statusDiv.textContent = '❌ Not logged in';
+                    outputDiv.textContent = 'Please login first at login.html';
+                    return;
+                }
+                
+                // Get current user
+                const user = await apiGet(API_ENDPOINTS.currentUser);
+                console.log('Current user:', user);
+                
+                // Get orders
+                const response = await apiGet(API_ENDPOINTS.orders);
+                console.log('Orders response:', response);
+                
+                // Handle paginated vs direct array response
+                let orders = [];
+                let isPaginated = false;
+                
+                if (Array.isArray(response)) {
+                    orders = response;
+                } else if (response.results && Array.isArray(response.results)) {
+                    orders = response.results;
+                    isPaginated = true;
+                }
+                
+                statusDiv.innerHTML = `
+                    ✅ Success<br>
+                    Response type: ${isPaginated ? 'Paginated' : 'Direct Array'}<br>
+                    Found ${orders.length} orders
+                `;
+                
+                outputDiv.textContent = JSON.stringify(response, null, 2);
+                
+                // Check for name field
+                if (orders.length > 0) {
+                    const firstOrder = orders[0];
+                    console.log('First order buyer:', firstOrder.buyer);
+                    console.log('Buyer has name field?', 'name' in firstOrder.buyer);
+                    
+                    if (firstOrder.items && firstOrder.items.length > 0) {
+                        console.log('First item seller:', firstOrder.items[0].seller);
+                        console.log('Seller has name field?', 'name' in firstOrder.items[0].seller);
+                    }
+                }
+                
+            } catch (error) {
+                statusDiv.textContent = '❌ Error: ' + error.message;
+                outputDiv.textContent = error.stack || error.toString();
+                console.error('Error:', error);
+            }
+        }
+        test();
+    </script>
+</body>
+</html>

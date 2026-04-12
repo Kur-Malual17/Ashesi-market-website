@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>⚠️ YOU MUST LOGIN HERE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 { 
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+            text-align: center;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .warning h2 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        .form-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+            display: block;
+        }
+        .error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+            display: block;
+        }
+        .links {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .links a {
+            display: block;
+            margin: 10px 0;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .step strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 LOGIN REQUIRED</h1>
+        
+        <div class="warning">
+            <h2>⚠️ YOU ARE NOT LOGGED IN!</h2>
+            <p>You must login here to use the marketplace.</p>
+        </div>
+
+        <div class="step">
+            <strong>Why you're seeing this:</strong><br>
+            You have old data in your browser, but no active session with Django.
+            You need to login again to get a fresh session cookie.
+        </div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" placeholder="your.email@ashesi.edu.gh" required value="garang@gmail.com">
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" id="login-btn">
+                🔑 LOGIN NOW
+            </button>
+        </form>
+
+        <div id="result" class="result"></div>
+
+        <div class="links" id="success-links" style="display: none;">
+            <h3 style="color: #28a745; margin-bottom: 15px;">✅ Login Successful!</h3>
+            <p style="margin-bottom: 15px;">You can now access:</p>
+            <a href="products.html">📦 Browse Products</a>
+            <a href="sell.html">💰 Sell Products</a>
+            <a href="cart.html">🛒 Shopping Cart</a>
+            <a href="orders.html">📋 My Orders</a>
+            <a href="profile.html">👤 My Profile</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('login-btn');
+            const result = document.getElementById('result');
+            const successLinks = document.getElementById('success-links');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            btn.textContent = '⏳ Logging in...';
+            btn.disabled = true;
+            result.style.display = 'none';
+            successLinks.style.display = 'none';
+            
+            try {
+                console.log('Step 1: Getting CSRF token...');
+                
+                // Get CSRF token
+                await fetch(`${API_BASE}/api/csrf/`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                // Wait a bit for cookie to be set
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Get CSRF token from cookie
+                const csrfToken = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('csrftoken='))
+                    ?.split('=')[1];
+                
+                if (!csrfToken) {
+                    throw new Error('Could not get CSRF token. Please refresh the page and try again.');
+                }
+                
+                console.log('Step 2: Logging in with credentials...');
+                console.log('Email:', email);
+                console.log('CSRF Token:', csrfToken.substring(0, 20) + '...');
+                
+                // Login
+                const loginResp = await fetch(`${API_BASE}/api/auth/login/`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                console.log('Login response status:', loginResp.status);
+                
+                if (!loginResp.ok) {
+                    const errorData = await loginResp.json();
+                    console.error('Login error:', errorData);
+                    throw new Error(errorData.error || errorData.detail || 'Login failed');
+                }
+                
+                const data = await loginResp.json();
+                console.log('Login successful!', data);
+                
+                // Save to localStorage
+                localStorage.setItem('user', JSON.stringify(data.user));
+                
+                // Check for session cookie
+                const hasSessionId = document.cookie.includes('sessionid');
+                console.log('Session cookie present:', hasSessionId);
+                
+                if (!hasSessionId) {
+                    throw new Error('Login succeeded but no session cookie was set. This is a Django configuration issue.');
+                }
+                
+                // Success!
+                result.className = 'result success';
+                result.style.display = 'block';
+                result.innerHTML = `
+                    <h3>✅ Login Successful!</h3>
+                    <p><strong>Welcome, ${data.user.name}!</strong></p>
+                    <p>Session cookie: ✅ Active</p>
+                    <p>You can now use all features of the marketplace.</p>
+                `;
+                
+                successLinks.style.display = 'block';
+                btn.textContent = '✅ LOGGED IN';
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                result.className = 'result error';
+                result.style.display = 'block';
+                result.innerHTML = `
+                    <h3>❌ Login Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Possible causes:</strong></p>
+                    <ul style="margin: 10px 0; padding-left: 20px; text-align: left;">
+                        <li>Wrong email or password</li>
+                        <li>Django server not running</li>
+                        <li>User doesn't exist in database</li>
+                        <li>Email must end with @ashesi.edu.gh</li>
+                    </ul>
+                    <p><strong>Check Django logs for more details.</strong></p>
+                `;
+                
+                btn.textContent = '🔑 TRY AGAIN';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Debug Login</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        .box { background: #2d2d2d; padding: 20px; margin: 20px 0; border-radius: 10px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; font-size: 16px; }
+        button { padding: 15px 30px; background: #0e639c; color: white; border: none; cursor: pointer; font-size: 16px; }
+        pre { background: #1e1e1e; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .warn { color: #dcdcaa; }
+    </style>
+</head>
+<body>
+    <h1>🐛 Debug Login</h1>
+    
+    <div class="box">
+        <h2>Login Form</h2>
+        <input type="email" id="email" placeholder="Email" value="garang@gmail.com">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="debugLogin()">Login & Debug</button>
+    </div>
+    
+    <div id="log"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warn' ? 'warn' : '';
+            logDiv.innerHTML += `<div class="box ${className}">${message}</div>`;
+            console.log(message);
+        }
+
+        async function debugLogin() {
+            document.getElementById('log').innerHTML = '';
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            log('<h2>🔍 Starting Debug Login...</h2>');
+            
+            // Step 1: Check initial cookies
+            log('<h3>Step 1: Initial Cookies</h3><pre>' + (document.cookie || 'No cookies') + '</pre>');
+            
+            // Step 2: Get CSRF token
+            log('<h3>Step 2: Getting CSRF Token...</h3>');
+            try {
+                const csrfResp = await fetch('http://localhost:8000/api/csrf/', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                log(`CSRF Response: ${csrfResp.status}`, csrfResp.ok ? 'success' : 'error');
+                log('<pre>Headers: ' + JSON.stringify([...csrfResp.headers.entries()], null, 2) + '</pre>');
+                
+                await new Promise(r => setTimeout(r, 100));
+                
+                const csrfToken = document.cookie.split('; ').find(r => r.startsWith('csrftoken='))?.split('=')[1];
+                if (csrfToken) {
+                    log(`✅ CSRF Token: ${csrfToken.substring(0, 20)}...`, 'success');
+                } else {
+                    log('❌ No CSRF token found!', 'error');
+                    return;
+                }
+                
+                // Step 3: Login
+                log('<h3>Step 3: Sending Login Request...</h3>');
+                log(`Email: ${email}`);
+                log(`Password: ${'*'.repeat(password.length)}`);
+                
+                const loginResp = await fetch('http://localhost:8000/api/auth/login/', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                log(`Login Response: ${loginResp.status}`, loginResp.ok ? 'success' : 'error');
+                log('<pre>Response Headers:\n' + JSON.stringify([...loginResp.headers.entries()], null, 2) + '</pre>');
+                
+                const data = await loginResp.json();
+                log('<pre>Response Body:\n' + JSON.stringify(data, null, 2) + '</pre>');
+                
+                if (!loginResp.ok) {
+                    log('❌ Login Failed!', 'error');
+                    return;
+                }
+                
+                // Step 4: Check cookies after login
+                log('<h3>Step 4: Cookies After Login</h3>');
+                await new Promise(r => setTimeout(r, 100));
+                const cookiesAfter = document.cookie;
+                log('<pre>' + (cookiesAfter || 'No cookies') + '</pre>');
+                
+                const hasSessionId = cookiesAfter.includes('sessionid');
+                if (hasSessionId) {
+                    log('✅ Session cookie found!', 'success');
+                } else {
+                    log('❌ NO SESSION COOKIE! This is the problem!', 'error');
+                    log('Django is not setting the session cookie properly.', 'warn');
+                }
+                
+                // Step 5: Test authenticated endpoint
+                log('<h3>Step 5: Testing Authenticated Endpoint...</h3>');
+                const testResp = await fetch('http://localhost:8000/api/auth/user/', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                log(`Test Response: ${testResp.status}`, testResp.ok ? 'success' : 'error');
+                
+                if (testResp.ok) {
+                    const userData = await testResp.json();
+                    log('✅ Authentication working!', 'success');
+                    log('<pre>' + JSON.stringify(userData, null, 2) + '</pre>');
+                } else {
+                    log('❌ Authentication failed - 403 Forbidden', 'error');
+                    log('This confirms the session cookie is not working.', 'warn');
+                }
+                
+                // Step 6: Summary
+                log('<h3>📊 Summary</h3>');
+                if (hasSessionId && testResp.ok) {
+                    log('✅ Everything is working! You are logged in.', 'success');
+                } else if (!hasSessionId) {
+                    log('❌ Problem: Django is not setting the session cookie.', 'error');
+                    log('Check Django settings: SESSION_COOKIE_SAMESITE, SESSION_COOKIE_SECURE', 'warn');
+                    log('Check Django console for debug messages.', 'warn');
+                } else {
+                    log('❌ Problem: Session cookie exists but Django is not recognizing it.', 'error');
+                    log('This might be a cookie domain/path issue.', 'warn');
+                }
+                
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                log('<pre>' + error.stack + '</pre>');
+            }
+        }
+    </script>
+</body>
+</html>

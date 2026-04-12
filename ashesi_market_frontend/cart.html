@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart — Ashesi Market</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .cart-layout { display: grid; grid-template-columns: 1fr 300px; gap: 28px; align-items: start; }
+        .cart-item {
+            display: grid; grid-template-columns: 80px 1fr auto;
+            gap: 14px; align-items: center; padding: 16px 0;
+            border-bottom: 1px solid var(--c-border);
+        }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item-thumb { width: 80px; height: 80px; border-radius: 8px; overflow: hidden; background: var(--c-bg); }
+        .cart-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .cart-item-title { font-weight: 600; font-size: .95rem; }
+        .cart-item-price { font-size: .88rem; color: var(--c-muted); }
+        .order-summary { padding: 20px; }
+        .order-summary h3 { font-weight: 600; margin-bottom: 14px; }
+        .summary-row { display: flex; justify-content: space-between; font-size: .9rem; margin-bottom: 8px; }
+        .summary-total { border-top: 1px solid var(--c-border); padding-top: 12px; font-weight: 700; font-size: 1rem; }
+        .qty-stepper { display: flex; align-items: center; gap: 0; border: 1.5px solid var(--c-border); border-radius: var(--radius); width: fit-content; }
+        .qty-stepper button {
+            width: 36px; height: 36px; background: none; border: none;
+            font-size: 1.2rem; cursor: pointer; color: var(--c-text);
+        }
+        .qty-stepper input { width: 46px; text-align: center; border: none; outline: none; font-size: .95rem; font-family: var(--font-body); background: transparent; }
+        @media (max-width: 768px) {
+            .cart-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a class="brand" href="index.html">
+                <span class="brand-icon">🛍</span>
+                <span class="brand-text">Ashesi Market</span>
+            </a>
+            <form class="nav-search" onsubmit="event.preventDefault(); searchProducts();">
+                <input type="text" id="search-input" placeholder="Search products, sellers…">
+                <button type="submit">Search</button>
+            </form>
+            <div class="nav-actions">
+                <a class="nav-link" href="login.html" id="nav-login">Log in</a>
+                <a class="btn btn-sm" href="register.html" id="nav-register">Register</a>
+                <a class="nav-link" href="cart.html" id="nav-cart" style="display: none;">
+                    Cart <span class="badge" id="cart-badge" style="display: none;">0</span>
+                </a>
+                <a class="nav-link" href="orders.html" id="nav-orders" style="display: none;">Orders</a>
+                <a class="nav-link" href="profile.html" id="nav-profile" style="display: none;">Profile</a>
+                <a class="btn btn-sm" href="sell.html" id="nav-sell" style="display: none;">+ Sell</a>
+                <a class="nav-link" href="#" onclick="logout(); return false;" id="nav-logout" style="display: none;">Log out</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="page-header">
+                <h1>Shopping Cart</h1>
+                <p>Review your items before checkout</p>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <div class="cart-layout" id="cart-content">
+                <div class="text-center" style="padding: 40px 0;">
+                    <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--c-border); border-top-color: var(--c-accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; <span id="year"></span> Ashesi Market — Ashesi University Student Marketplace</p>
+        </div>
+    </footer>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirm-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+            <h3 id="confirm-title" style="margin:0 0 12px 0;font-size:1.2rem;">Confirm Action</h3>
+            <p id="confirm-message" style="margin:0 0 20px 0;color:#666;line-height:1.6;"></p>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button onclick="closeConfirmModal(false)" class="btn btn-outline">Cancel</button>
+                <button onclick="closeConfirmModal(true)" class="btn btn-primary" id="confirm-ok-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+        
+        // Custom confirmation modal
+        let confirmResolve = null;
+        
+        function showConfirmModal(message, title = 'Confirm Action', okButtonText = 'OK') {
+            return new Promise((resolve) => {
+                confirmResolve = resolve;
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-message').textContent = message;
+                document.getElementById('confirm-ok-btn').textContent = okButtonText;
+                document.getElementById('confirm-modal').style.display = 'flex';
+            });
+        }
+        
+        function closeConfirmModal(result) {
+            document.getElementById('confirm-modal').style.display = 'none';
+            if (confirmResolve) {
+                confirmResolve(result);
+                confirmResolve = null;
+            }
+        }
+        
+        // Require login
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html?redirect=cart.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', loadCart);
+
+        async function loadCart() {
+            try {
+                const cart = await apiGet(API_ENDPOINTS.cart);
+                const container = document.getElementById('cart-content');
+                
+                if (!cart.items || cart.items.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1 / -1;">
+                            <div class="icon">🛒</div>
+                            <p>Your cart is empty</p>
+                            <a href="products.html" class="btn btn-primary mt-3">Browse Products</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const cartItemsHtml = cart.items.map(item => `
+                    <div class="cart-item">
+                        <div class="cart-item-thumb">
+                            ${item.product.primary_image ? 
+                                `<img src="${item.product.primary_image}" alt="${item.product.title}">` :
+                                '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:2rem;">📦</div>'
+                            }
+                        </div>
+                        <div>
+                            <div class="cart-item-title">${item.product.title}</div>
+                            <div class="cart-item-price">GH₵ ${parseFloat(item.product.price).toFixed(2)} each</div>
+                            <div class="qty-stepper mt-2">
+                                <button class="qty-minus" onclick="updateQuantity(${item.id}, ${item.quantity - 1})">−</button>
+                                <input type="number" value="${item.quantity}" readonly>
+                                <button class="qty-plus" onclick="updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 700; color: var(--c-accent); font-size: 1.1rem; margin-bottom: 8px;">
+                                GH₵ ${parseFloat(item.subtotal).toFixed(2)}
+                            </div>
+                            <button class="btn btn-sm btn-danger" onclick="removeItem(${item.id})">Remove</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="card" style="padding: 20px;">
+                        ${cartItemsHtml}
+                    </div>
+                    <div class="card order-summary">
+                        <h3>Order Summary</h3>
+                        <div class="summary-row">
+                            <span>Subtotal (${cart.total_items} items)</span>
+                            <span>GH₵ ${parseFloat(cart.total_amount).toFixed(2)}</span>
+                        </div>
+                        <div class="summary-row summary-total">
+                            <span>Total</span>
+                            <span>GH₵ ${parseFloat(cart.total_amount).toFixed(2)}</span>
+                        </div>
+                        <button class="btn btn-primary w-full mt-3" onclick="checkout()">
+                            Proceed to Checkout
+                        </button>
+                        <a href="products.html" class="btn btn-outline w-full mt-2">Continue Shopping</a>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading cart:', error);
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-error">Failed to load cart. Please try again.</div>
+                `;
+            }
+        }
+
+        async function updateQuantity(itemId, newQuantity) {
+            if (newQuantity < 1) return;
+            
+            try {
+                await apiPut(API_ENDPOINTS.cartUpdate(itemId), { quantity: newQuantity });
+                await loadCart();
+                updateCartBadge();
+            } catch (error) {
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>Failed to update quantity:</strong><br>
+                        ${error.message || 'Please try again.'}
+                    </div>
+                `;
+                window.scrollTo(0, 0);
+            }
+        }
+
+        async function removeItem(itemId) {
+            const confirmed = await showConfirmModal(
+                'Remove this item from your cart?',
+                'Remove Item',
+                'Yes, Remove'
+            );
+            
+            if (!confirmed) return;
+            
+            try {
+                await apiDelete(API_ENDPOINTS.cartRemove(itemId));
+                await loadCart();
+                updateCartBadge();
+            } catch (error) {
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>Failed to remove item:</strong><br>
+                        ${error.message || 'Please try again.'}
+                    </div>
+                `;
+                window.scrollTo(0, 0);
+            }
+        }
+
+        async function checkout() {
+            try {
+                const order = await apiPost(API_ENDPOINTS.checkout, {});
+                
+                // Build order items summary
+                let itemsSummary = '';
+                let totalAmount = 0;
+                const sellers = new Map(); // Use Map to group items by seller
+                
+                if (order.items && order.items.length > 0) {
+                    order.items.forEach(item => {
+                        const itemTotal = parseFloat(item.unit_price) * item.quantity;
+                        totalAmount += itemTotal;
+                        
+                        itemsSummary += `<div style="padding:8px 0;border-bottom:1px solid #e0e0e0;">
+                            <strong>${item.product.title}</strong><br>
+                            <span style="color:#666;font-size:0.9rem;">Quantity: ${item.quantity} × GH₵ ${parseFloat(item.unit_price).toFixed(2)} = GH₵ ${itemTotal.toFixed(2)}</span>
+                        </div>`;
+                        
+                        // Group by seller
+                        const sellerId = item.seller.id;
+                        if (!sellers.has(sellerId)) {
+                            const sellerName = item.seller.name || `${item.seller.first_name} ${item.seller.last_name}`;
+                            sellers.set(sellerId, {
+                                name: sellerName,
+                                phone: item.seller.phone_whatsapp,
+                                items: []
+                            });
+                        }
+                        sellers.get(sellerId).items.push({
+                            title: item.product.title,
+                            quantity: item.quantity,
+                            price: parseFloat(item.unit_price).toFixed(2),
+                            total: itemTotal.toFixed(2)
+                        });
+                    });
+                }
+                
+                // Build WhatsApp buttons for each seller
+                let whatsappButtons = '';
+                sellers.forEach((seller, sellerId) => {
+                    if (seller.phone) {
+                        // Build message with order details
+                        let itemsList = seller.items.map(item => 
+                            `${item.title} (${item.quantity}x GH₵${item.price})`
+                        ).join(', ');
+                        
+                        const waMsg = `Hi ${seller.name}! I just placed Order #${order.id} on Ashesi Market.\n\nItems: ${itemsList}\n\nLooking forward to receiving my items!`;
+                        const waUrl = generateWhatsAppURL(seller.phone, waMsg);
+                        
+                        whatsappButtons += `
+                            <div style="margin:16px 0;padding:16px;background:#f8f9fa;border-radius:8px;text-align:center;">
+                                <div style="font-weight:600;margin-bottom:8px;font-size:1rem;">Contact ${seller.name}</div>
+                                <div style="color:#666;font-size:0.85rem;margin-bottom:12px;">📱 ${seller.phone}</div>
+                                <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;font-size:1rem;text-decoration:none;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                                    </svg>
+                                    WhatsApp ${seller.name}
+                                </a>
+                            </div>
+                        `;
+                    }
+                });
+                
+                // Show success message
+                const successMessage = `
+                    <div style="text-align:center;padding:20px;">
+                        <div style="font-size:3rem;margin-bottom:16px;">✅</div>
+                        <h2 style="color:var(--c-success);margin-bottom:8px;">Order Placed Successfully!</h2>
+                        <p style="font-size:1.1rem;margin-bottom:24px;">Order #${order.id} has been created</p>
+                        
+                        <div style="background:#f8f9fa;padding:20px;border-radius:8px;margin:20px 0;text-align:left;">
+                            <h3 style="margin-bottom:12px;font-size:1rem;">Order Summary:</h3>
+                            ${itemsSummary}
+                            <div style="padding:12px 0;font-weight:700;font-size:1.1rem;color:var(--c-accent);">
+                                Total: GH₵ ${totalAmount.toFixed(2)}
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top:24px;">
+                            <h3 style="margin-bottom:16px;font-size:1.1rem;">Contact Your Seller</h3>
+                            <p style="color:#666;margin-bottom:16px;">Click the button below to WhatsApp the seller about your order</p>
+                            ${whatsappButtons}
+                        </div>
+                        
+                        <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e0e0e0;">
+                            <a href="orders.html" class="btn btn-primary" style="text-decoration:none;">
+                                View My Orders
+                            </a>
+                            <a href="products.html" class="btn btn-outline" style="text-decoration:none;margin-left:8px;">
+                                Continue Shopping
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-success" style="padding:0;border:none;background:white;">
+                        ${successMessage}
+                    </div>
+                `;
+                
+                // Clear cart display
+                document.getElementById('cart-content').innerHTML = '';
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+                
+            } catch (error) {
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>Checkout Failed</strong><br>
+                        ${error.message || 'Unable to place order. Please try again.'}
+                    </div>
+                `;
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function generateWhatsAppURL(phone, message) {
+            let cleanPhone = phone.replace(/\D/g, '');
+            if (cleanPhone.length === 10 && cleanPhone[0] === '0') {
+                cleanPhone = '233' + cleanPhone.substring(1);
+            }
+            return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+        }
+
+        function searchProducts() {
+            const query = document.getElementById('search-input').value;
+            if (query) {
+                window.location.href = `products.html?q=${encodeURIComponent(query)}`;
+            }
+        }
+    </script>
+</body>
+</html>

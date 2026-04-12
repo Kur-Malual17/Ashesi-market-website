@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Final Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .box { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 10px; border: 2px solid #dee2e6; }
+        .success { background: #d4edda; border-color: #28a745; }
+        .error { background: #f8d7da; border-color: #dc3545; }
+        button { padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        pre { background: white; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        .test-item { padding: 10px; margin: 5px 0; border-left: 4px solid #ccc; }
+        .test-pass { border-left-color: #28a745; }
+        .test-fail { border-left-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Final Comprehensive Test</h1>
+    
+    <div class="box">
+        <h2>Current Page URL</h2>
+        <pre id="current-url"></pre>
+        <p><strong>Important:</strong> You must access this page via <code>http://localhost:8080</code></p>
+        <p>If you see <code>127.0.0.1</code> in the URL above, that might be the problem!</p>
+    </div>
+    
+    <button onclick="runAllTests()">Run All Tests</button>
+    
+    <div id="results"></div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    
+    <script>
+        document.getElementById('current-url').textContent = window.location.href;
+        
+        async function runAllTests() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="box">Running tests...</div>';
+            
+            let html = '';
+            let allPassed = true;
+            
+            // Test 1: Check cookies
+            html += '<div class="box"><h2>Test 1: Cookies</h2>';
+            const cookies = document.cookie;
+            const hasSession = cookies.includes('sessionid');
+            const hasCsrf = cookies.includes('csrftoken');
+            
+            html += `<div class="test-item ${hasSession ? 'test-pass' : 'test-fail'}">`;
+            html += `${hasSession ? '✅' : '❌'} Session Cookie: ${hasSession ? 'Present' : 'Missing'}`;
+            html += '</div>';
+            
+            html += `<div class="test-item ${hasCsrf ? 'test-pass' : 'test-fail'}">`;
+            html += `${hasCsrf ? '✅' : '❌'} CSRF Cookie: ${hasCsrf ? 'Present' : 'Missing'}`;
+            html += '</div>';
+            
+            html += '<pre>' + (cookies || 'No cookies') + '</pre>';
+            html += '</div>';
+            
+            if (!hasSession) {
+                allPassed = false;
+            }
+            
+            // Test 2: Check localStorage
+            html += '<div class="box"><h2>Test 2: LocalStorage</h2>';
+            const user = localStorage.getItem('user');
+            html += `<div class="test-item ${user ? 'test-pass' : 'test-fail'}">`;
+            html += `${user ? '✅' : '❌'} User Data: ${user ? 'Present' : 'Missing'}`;
+            html += '</div>';
+            if (user) {
+                html += '<pre>' + user + '</pre>';
+            }
+            html += '</div>';
+            
+            // Test 3: Test API with our helper functions
+            html += '<div class="box"><h2>Test 3: API Calls (using js/api.js)</h2>';
+            
+            try {
+                const userData = await apiGet(API_ENDPOINTS.currentUser);
+                html += '<div class="test-item test-pass">✅ Current User API: Success</div>';
+                html += '<pre>' + JSON.stringify(userData, null, 2) + '</pre>';
+            } catch (error) {
+                html += '<div class="test-item test-fail">❌ Current User API: ' + error.message + '</div>';
+                allPassed = false;
+            }
+            
+            try {
+                const cart = await apiGet(API_ENDPOINTS.cart);
+                html += '<div class="test-item test-pass">✅ Cart API: Success</div>';
+                html += '<pre>' + JSON.stringify(cart, null, 2) + '</pre>';
+            } catch (error) {
+                html += '<div class="test-item test-fail">❌ Cart API: ' + error.message + '</div>';
+                allPassed = false;
+            }
+            
+            html += '</div>';
+            
+            // Test 4: Direct fetch (without helper)
+            html += '<div class="box"><h2>Test 4: Direct Fetch (no helpers)</h2>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/auth/user/', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                html += `<div class="test-item ${response.ok ? 'test-pass' : 'test-fail'}">`;
+                html += `${response.ok ? '✅' : '❌'} Direct Fetch: Status ${response.status}`;
+                html += '</div>';
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    const error = await response.json();
+                    html += '<pre>Error: ' + JSON.stringify(error, null, 2) + '</pre>';
+                    allPassed = false;
+                }
+            } catch (error) {
+                html += '<div class="test-item test-fail">❌ Direct Fetch Error: ' + error.message + '</div>';
+                allPassed = false;
+            }
+            
+            html += '</div>';
+            
+            // Summary
+            html += `<div class="box ${allPassed ? 'success' : 'error'}">`;
+            html += `<h2>${allPassed ? '✅ All Tests Passed!' : '❌ Some Tests Failed'}</h2>`;
+            
+            if (allPassed) {
+                html += '<p><strong>Everything is working!</strong> You can now use:</p>';
+                html += '<ul>';
+                html += '<li><a href="products.html">Browse Products</a></li>';
+                html += '<li><a href="sell.html">Add Products</a></li>';
+                html += '<li><a href="cart.html">Shopping Cart</a></li>';
+                html += '<li><a href="orders.html">Orders</a></li>';
+                html += '<li><a href="profile.html">Profile</a></li>';
+                html += '</ul>';
+            } else {
+                html += '<p><strong>Problems detected:</strong></p>';
+                if (!hasSession) {
+                    html += '<p>❌ No session cookie - You need to <a href="debug-login.html">login again</a></p>';
+                }
+                html += '<p>Make sure you are accessing via <code>http://localhost:8080</code> (not 127.0.0.1)</p>';
+            }
+            
+            html += '</div>';
+            
+            results.innerHTML = html;
+        }
+        
+        // Auto-run on load
+        window.onload = runAllTests;
+    </script>
+</body>
+</html>
