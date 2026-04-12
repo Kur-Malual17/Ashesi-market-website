@@ -1,6 +1,6 @@
 // API Configuration
 // Use environment variable if available, otherwise use Railway production URL
-const API_BASE_URL = window.ENV?.API_BASE_URL || 'ashesi-market-website-production.up.railway.app';
+const API_BASE_URL = window.ENV?.API_BASE_URL || 'https://ashesi-market-website-production.up.railway.app/api';
 
 // For local development, uncomment the line below:
 // const API_BASE_URL = 'http://localhost:8000/api';
