@@ -205,17 +205,17 @@ CORS_ALLOW_HEADERS = [
 
 # Session Settings
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
-SESSION_COOKIE_HTTPONLY = False  # Allow JavaScript to read (for debugging)
-SESSION_COOKIE_SAMESITE = config('SESSION_COOKIE_SAMESITE', default='Lax')
-SESSION_COOKIE_DOMAIN = config('SESSION_COOKIE_DOMAIN', default=None)
+SESSION_COOKIE_HTTPONLY = True  # Secure for admin
+SESSION_COOKIE_SAMESITE = 'Lax'  # Works for admin on same domain
+SESSION_COOKIE_DOMAIN = None  # Allow Railway domain
 SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
 SESSION_COOKIE_PATH = '/'  # Available on all paths
 SESSION_SAVE_EVERY_REQUEST = True  # Keep session alive
 
 # CSRF Settings
-CSRF_COOKIE_SAMESITE = config('CSRF_COOKIE_SAMESITE', default='Lax')
+CSRF_COOKIE_SAMESITE = 'Lax'  # Works for admin
 CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF token
-CSRF_COOKIE_DOMAIN = config('CSRF_COOKIE_DOMAIN', default=None)
+CSRF_COOKIE_DOMAIN = None  # Allow Railway domain
 CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
