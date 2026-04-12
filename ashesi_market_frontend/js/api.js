@@ -1,25 +1,13 @@
 // API Helper Functions
 
-// Get CSRF token from cookie
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
+// Get access token from localStorage
+function getAccessToken() {
+    return localStorage.getItem('access_token');
 }
 
-// Generic API request function
+// Generic API request function with JWT
 async function apiRequest(url, options = {}) {
     const defaultOptions = {
-        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
         }
@@ -27,12 +15,10 @@ async function apiRequest(url, options = {}) {
     
     const config = { ...defaultOptions, ...options };
     
-    // Add CSRF token for non-GET requests
-    if (options.method && options.method !== 'GET') {
-        const csrfToken = getCookie('csrftoken');
-        if (csrfToken) {
-            config.headers['X-CSRFToken'] = csrfToken;
-        }
+    // Add JWT token if available
+    const token = getAccessToken();
+    if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
     }
     
     // Merge headers
@@ -120,16 +106,16 @@ async function apiDelete(url) {
 
 // POST with FormData (for file uploads)
 async function apiPostFormData(url, formData) {
-    const csrfToken = getCookie('csrftoken');
+    const token = getAccessToken();
     const headers = {};
-    if (csrfToken) {
-        headers['X-CSRFToken'] = csrfToken;
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
     }
     
     return apiRequest(url, {
         method: 'POST',
         body: formData,
-        headers: headers // Let browser set Content-Type for FormData, but include CSRF
+        headers: headers // Let browser set Content-Type for FormData
     });
 }
 

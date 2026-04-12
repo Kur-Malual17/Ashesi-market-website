@@ -146,8 +146,9 @@
                 
                 const response = await apiPost(API_ENDPOINTS.register, data);
                 
-                // Save user data
+                // Save user data and tokens
                 saveUser(response.user);
+                saveTokens(response.tokens);
                 
                 // Redirect to home
                 window.location.href = 'index.html';

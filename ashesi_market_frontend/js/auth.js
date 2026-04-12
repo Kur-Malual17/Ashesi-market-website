@@ -1,20 +1,33 @@
 // Authentication Management
 
-// Initialize CSRF token
+// Token management
+function getAccessToken() {
+    return localStorage.getItem('access_token');
+}
+
+function getRefreshToken() {
+    return localStorage.getItem('refresh_token');
+}
+
+function saveTokens(tokens) {
+    localStorage.setItem('access_token', tokens.access);
+    localStorage.setItem('refresh_token', tokens.refresh);
+}
+
+function removeTokens() {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+}
+
+// Initialize CSRF token (not needed for JWT but kept for compatibility)
 async function initCSRF() {
-    try {
-        await fetch(API_ENDPOINTS.csrf, {
-            method: 'GET',
-            credentials: 'include',
-        });
-    } catch (error) {
-        console.error('Error initializing CSRF:', error);
-    }
+    // JWT doesn't need CSRF tokens
+    return;
 }
 
 // Check if user is logged in
 function isLoggedIn() {
-    return localStorage.getItem('user') !== null;
+    return getAccessToken() !== null && localStorage.getItem('user') !== null;
 }
 
 // Get current user
@@ -31,6 +44,7 @@ function saveUser(user) {
 // Remove user from localStorage
 function removeUser() {
     localStorage.removeItem('user');
+    removeTokens();
 }
 
 // Update navigation based on auth status

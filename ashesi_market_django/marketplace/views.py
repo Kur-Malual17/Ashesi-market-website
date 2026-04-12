@@ -11,6 +11,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, Review
 from .serializers import (
@@ -20,27 +21,35 @@ from .serializers import (
 )
 
 
-# CSRF Token View
+# Helper function to generate JWT tokens
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+
+# CSRF Token View (kept for backward compatibility)
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@ensure_csrf_cookie
 def csrf_token_view(request):
-    """Get CSRF token"""
+    """Get CSRF token - not needed for JWT but kept for compatibility"""
     return Response({'detail': 'CSRF cookie set'})
 
 
 # Authentication Views
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@ensure_csrf_cookie
 def register_view(request):
-    """User registration"""
+    """User registration with JWT tokens"""
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-        login(request, user)
+        tokens = get_tokens_for_user(user)
         return Response({
             'user': UserProfileSerializer(user).data,
+            'tokens': tokens,
             'message': 'Registration successful'
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -48,11 +57,24 @@ def register_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@ensure_csrf_cookie
 def login_view(request):
-    """User login"""
+    """User login with JWT tokens"""
     email = request.data.get('email', '').lower()
     password = request.data.get('password', '')
+    
+    user = authenticate(request, username=email, password=password)
+    
+    if user:
+        tokens = get_tokens_for_user(user)
+        return Response({
+            'user': UserProfileSerializer(user).data,
+            'tokens': tokens,
+            'message': 'Login successful'
+        })
+    
+    return Response({
+        'error': 'Invalid credentials'
+    }, status=status.HTTP_401_UNAUTHORIZED)
     
     print(f"Login attempt for: {email}")  # Debug
     
@@ -89,16 +111,17 @@ def login_view(request):
 
 
 @api_view(['POST'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
-    """User logout"""
-    logout(request)
+    """User logout - with JWT, client just deletes the token"""
+    # For JWT, logout is handled client-side by deleting the token
+    # But we can blacklist the refresh token if needed
     return Response({'message': 'Logout successful'})
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-@ensure_csrf_cookie
 def current_user_view(request):
     """Get current user info"""
     return Response(UserProfileSerializer(request.user).data)
