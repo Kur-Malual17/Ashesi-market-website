@@ -128,16 +128,26 @@
                     isOwnProfile = currentUser && currentUser.id === viewingUser.id;
                 } else {
                     // Viewing own profile
+                    if (!currentUser) {
+                        throw new Error('Not logged in');
+                    }
                     viewingUser = currentUser;
                     isOwnProfile = true;
+                }
+                
+                if (!viewingUser) {
+                    throw new Error('User data not available');
                 }
                 
                 renderProfile();
                 await loadListings();
             } catch (error) {
                 console.error('Error loading profile:', error);
+                console.error('Error details:', error.message);
                 document.getElementById('alert-container').innerHTML = `
-                    <div class="alert alert-error">Failed to load profile. Please try again.</div>
+                    <div class="alert alert-error">
+                        Failed to load profile. ${error.message || 'Please try again.'}
+                    </div>
                 `;
             }
         }

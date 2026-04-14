@@ -478,11 +478,31 @@
                             </div>
                             <span class="status-pill status-${orderStatus}" id="status-${orderId}">${orderStatus}</span>
                         </div>
-                        ${items.map(item => `
+                        ${items.map(item => {
+                            const hasReview = item.review ? true : false;
+                            return `
                             <div class="order-item">
-                                <strong>${item.product.title}</strong> · ×${item.quantity} · GH₵ ${parseFloat(item.unit_price * item.quantity).toFixed(2)}
+                                <div style="display:flex;justify-content:space-between;align-items:start;">
+                                    <div style="flex:1;">
+                                        <strong>${item.product.title}</strong> · ×${item.quantity} · GH₵ ${parseFloat(item.unit_price * item.quantity).toFixed(2)}
+                                        ${hasReview ? `
+                                            <div style="margin-top:8px;padding:10px;background:#F8F9FA;border-radius:6px;border-left:3px solid #FFB800;">
+                                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                                                    <span style="color:#FFB800;font-size:.9rem;">${'★'.repeat(item.review.rating)}${'☆'.repeat(5 - item.review.rating)}</span>
+                                                    <span style="font-size:.8rem;color:var(--c-muted);">Review by ${first.buyer_name}</span>
+                                                </div>
+                                                ${item.review.comment ? `<div style="font-size:.85rem;color:var(--c-text);line-height:1.5;">"${item.review.comment}"</div>` : ''}
+                                            </div>
+                                        ` : orderStatus === 'completed' ? `
+                                            <div style="margin-top:4px;font-size:.8rem;color:var(--c-muted);font-style:italic;">
+                                                Waiting for buyer's review
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
                             </div>
-                        `).join('')}
+                        `;
+                        }).join('')}
                         <div class="flex justify-between" style="margin-top:12px;font-weight:600;">
                             <span>Your Earnings</span>
                             <span style="color:var(--c-accent);font-size:1.1rem;">GH₵ ${total.toFixed(2)}</span>

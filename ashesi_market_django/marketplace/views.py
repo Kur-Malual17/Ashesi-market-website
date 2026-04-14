@@ -456,6 +456,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated]
     
+    def get_permissions(self):
+        # Allow anyone to view reviews (GET), but require auth for create/update/delete
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
+    
     def get_queryset(self):
         queryset = Review.objects.all().select_related('reviewer', 'seller', 'order_item__product')
         

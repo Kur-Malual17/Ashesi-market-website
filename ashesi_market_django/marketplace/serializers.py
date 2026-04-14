@@ -127,10 +127,24 @@ class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductListSerializer(read_only=True)
     seller = UserProfileSerializer(read_only=True)
     subtotal = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    review = serializers.SerializerMethodField()
     
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'seller', 'quantity', 'unit_price', 'subtotal']
+        fields = ['id', 'product', 'seller', 'quantity', 'unit_price', 'subtotal', 'review']
+    
+    def get_review(self, obj):
+        """Get review for this order item if it exists"""
+        try:
+            review = obj.review
+            return {
+                'id': review.id,
+                'rating': review.rating,
+                'comment': review.comment,
+                'created_at': review.created_at
+            }
+        except:
+            return None
 
 
 class OrderSerializer(serializers.ModelSerializer):
