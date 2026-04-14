@@ -51,6 +51,30 @@
             width: 50px; text-align: center; border: none; outline: none;
             font-size: .95rem; font-family: var(--font-body); background: transparent;
         }
+        .review-item {
+            padding: 16px 0; border-bottom: 1px solid var(--c-border);
+        }
+        .review-item:last-child {
+            border-bottom: none;
+        }
+        .review-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+        }
+        .review-author {
+            font-weight: 600; font-size: .95rem;
+        }
+        .review-date {
+            font-size: .8rem; color: var(--c-muted);
+        }
+        .review-stars {
+            color: #FFB800; font-size: 1rem; margin-bottom: 8px;
+        }
+        .review-comment {
+            font-size: .9rem; line-height: 1.6; color: var(--c-text);
+        }
+        .no-reviews {
+            text-align: center; padding: 30px 0; color: var(--c-muted);
+        }
         @media (max-width: 768px) {
             .product-detail { grid-template-columns: 1fr; }
         }
@@ -135,6 +159,7 @@
                 }
             }
             await loadProduct();
+            await loadSellerReviews();
         });
 
         async function loadProduct() {
@@ -253,6 +278,16 @@
                     <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:12px;">Description</h2>
                     <div style="white-space:pre-wrap;line-height:1.7;">${product.description}</div>
                 </div>
+
+                <!-- Seller Reviews -->
+                <div class="card" style="padding:24px;margin-top:28px;" id="seller-reviews-section">
+                    <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:16px;">Seller Reviews (<span id="review-count">0</span>)</h2>
+                    <div id="reviews-container">
+                        <div class="text-center" style="padding: 20px 0;">
+                            <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid var(--c-border); border-top-color: var(--c-accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        </div>
+                    </div>
+                </div>
             `;
         }
 
@@ -309,6 +344,84 @@
             const query = document.getElementById('search-input').value;
             if (query) {
                 window.location.href = `products.html?q=${encodeURIComponent(query)}`;
+            }
+        }
+
+        async function loadSellerReviews() {
+            if (!product || !product.seller) return;
+            
+            try {
+                const response = await apiGet(`${API_ENDPOINTS.reviews}?seller_id=${product.seller.id}`);
+                const reviews = response.results || response;
+                
+                console.log('Seller reviews loaded:', reviews);
+                
+                renderReviews(reviews);
+            } catch (error) {
+                console.error('Error loading reviews:', error);
+                document.getElementById('reviews-container').innerHTML = `
+                    <div class="no-reviews">
+                        <p>Unable to load reviews</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderReviews(reviews) {
+            const container = document.getElementById('reviews-container');
+            const countElement = document.getElementById('review-count');
+            
+            if (countElement) {
+                countElement.textContent = reviews.length;
+            }
+            
+            if (reviews.length === 0) {
+                container.innerHTML = `
+                    <div class="no-reviews">
+                        <p>No reviews yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const html = reviews.map(review => {
+                const reviewerName = review.reviewer?.name || 'Anonymous';
+                const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+                const date = formatReviewDate(review.created_at);
+                
+                return `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div class="review-author">${reviewerName}</div>
+                            <div class="review-date">${date}</div>
+                        </div>
+                        <div class="review-stars">${stars}</div>
+                        ${review.comment ? `<div class="review-comment">${review.comment}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+        }
+
+        function formatReviewDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) {
+                return 'Today';
+            } else if (diffDays === 1) {
+                return 'Yesterday';
+            } else if (diffDays < 7) {
+                return `${diffDays} days ago`;
+            } else {
+                return date.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
             }
         }
     </script>
