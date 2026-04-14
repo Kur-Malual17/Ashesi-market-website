@@ -163,6 +163,11 @@ R2_BUCKET_NAME = config('R2_BUCKET_NAME', default='ashmarket')
 R2_ENDPOINT_URL = f'https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com' if R2_ACCOUNT_ID else ''
 R2_CUSTOM_DOMAIN = config('R2_CUSTOM_DOMAIN', default='https://pub-bc50d4f6ddc648a983246d68e792aed7.r2.dev')
 
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
 # Use R2 for media files if configured
 if R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
     # AWS S3 settings (R2 is S3-compatible)
@@ -184,19 +189,15 @@ if R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
     
     # Media URL uses custom domain
     MEDIA_URL = f'{R2_CUSTOM_DOMAIN}/media/'
+    MEDIA_ROOT = None  # Not used with S3 storage
+    
+    print(f"✅ R2 Storage configured: {R2_BUCKET_NAME}")
+    print(f"✅ Media URL: {MEDIA_URL}")
 else:
     # Fallback to local storage
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
-
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
-
-# Media files (User uploads)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+    print("⚠️ Using local media storage (R2 not configured)")
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -235,11 +235,8 @@
 
                 // Upload images if any
                 if (selectedFiles.length > 0) {
-                    // Get CSRF token
-                    const csrfToken = document.cookie
-                        .split('; ')
-                        .find(row => row.startsWith('csrftoken='))
-                        ?.split('=')[1];
+                    // Get JWT token
+                    const token = getToken();
                     
                     for (let i = 0; i < selectedFiles.length; i++) {
                         const formData = new FormData();
@@ -247,14 +244,20 @@
                         formData.append('is_primary', i === 0 ? 'true' : 'false');
 
                         try {
-                            await fetch(API_ENDPOINTS.productUploadImage(product.id), {
+                            const response = await fetch(API_ENDPOINTS.productUploadImage(product.id), {
                                 method: 'POST',
-                                credentials: 'include',
                                 headers: {
-                                    'X-CSRFToken': csrfToken
+                                    'Authorization': `Bearer ${token}`
                                 },
                                 body: formData
                             });
+                            
+                            if (!response.ok) {
+                                const errorData = await response.json();
+                                console.error('Image upload failed:', errorData);
+                            } else {
+                                console.log(`Image ${i + 1} uploaded successfully`);
+                            }
                         } catch (imgError) {
                             console.error('Error uploading image:', imgError);
                         }

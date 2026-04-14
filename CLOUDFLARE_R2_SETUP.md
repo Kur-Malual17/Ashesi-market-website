@@ -43,24 +43,26 @@ Your public URL is already: `https://pub-bc50d4f6ddc648a983246d68e792aed7.r2.dev
 
 ## Step 3: Add to Railway Environment Variables
 
-Go to Railway → Django Service → Variables → Add:
+Go to Railway → Django Service → Variables → Add these 5 variables:
 
 ```
-R2_ACCOUNT_ID=your-account-id
-R2_ACCESS_KEY_ID=your-access-key-id
-R2_SECRET_ACCESS_KEY=your-secret-access-key
+R2_ACCOUNT_ID=4e0271ccb020dd1603c00c7ea7fef217
+R2_ACCESS_KEY_ID=<PASTE_YOUR_ACCESS_KEY_ID_HERE>
+R2_SECRET_ACCESS_KEY=<PASTE_YOUR_SECRET_ACCESS_KEY_HERE>
 R2_BUCKET_NAME=ashmarket
 R2_CUSTOM_DOMAIN=https://pub-bc50d4f6ddc648a983246d68e792aed7.r2.dev
 ```
 
-**Example:**
-```
-R2_ACCOUNT_ID=abc123def456ghi789
-R2_ACCESS_KEY_ID=1234567890abcdef
-R2_SECRET_ACCESS_KEY=abcdefghijklmnopqrstuvwxyz123456
-R2_BUCKET_NAME=ashmarket
-R2_CUSTOM_DOMAIN=https://pub-bc50d4f6ddc648a983246d68e792aed7.r2.dev
-```
+**IMPORTANT:** 
+- Replace `<PASTE_YOUR_ACCESS_KEY_ID_HERE>` with the Access Key ID from your "Backend-ashmarket" token
+- Replace `<PASTE_YOUR_SECRET_ACCESS_KEY_HERE>` with the Secret Access Key from your "Backend-ashmarket" token
+- If you closed the token creation screen, you'll need to create a new token (see Step 1.2 above)
+
+**Your bucket details (already configured):**
+- Account ID: `4e0271ccb020dd1603c00c7ea7fef217` ✅
+- Bucket Name: `ashmarket` ✅
+- Public URL: `https://pub-bc50d4f6ddc648a983246d68e792aed7.r2.dev` ✅
+- Public Access: Enabled ✅
 
 ## Step 4: Configure CORS (Important!)
 
