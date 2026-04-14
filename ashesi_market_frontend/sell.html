@@ -236,7 +236,18 @@
                 // Upload images if any
                 if (selectedFiles.length > 0) {
                     // Get JWT token
-                    const token = getToken();
+                    const token = getAccessToken();
+                    
+                    if (!token) {
+                        console.error('No access token found');
+                        alertContainer.innerHTML = `
+                            <div class="alert alert-error">Session expired. Please login again.</div>
+                        `;
+                        setTimeout(() => {
+                            window.location.href = 'login.html?redirect=sell.html';
+                        }, 2000);
+                        return;
+                    }
                     
                     for (let i = 0; i < selectedFiles.length; i++) {
                         const formData = new FormData();
