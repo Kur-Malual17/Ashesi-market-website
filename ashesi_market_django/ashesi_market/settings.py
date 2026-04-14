@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'django_filters',
+    'storages',
     
     # Local apps
     'marketplace',
@@ -153,6 +154,40 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Africa/Accra'
 USE_I18N = True
 USE_TZ = True
+
+# Cloudflare R2 Configuration
+R2_ACCOUNT_ID = config('R2_ACCOUNT_ID', default='')
+R2_ACCESS_KEY_ID = config('R2_ACCESS_KEY_ID', default='')
+R2_SECRET_ACCESS_KEY = config('R2_SECRET_ACCESS_KEY', default='')
+R2_BUCKET_NAME = config('R2_BUCKET_NAME', default='ashmarket')
+R2_ENDPOINT_URL = f'https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com' if R2_ACCOUNT_ID else ''
+R2_CUSTOM_DOMAIN = config('R2_CUSTOM_DOMAIN', default='https://pub-bc50d4f6ddc648a983246d68e792aed7.r2.dev')
+
+# Use R2 for media files if configured
+if R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
+    # AWS S3 settings (R2 is S3-compatible)
+    AWS_ACCESS_KEY_ID = R2_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY = R2_SECRET_ACCESS_KEY
+    AWS_STORAGE_BUCKET_NAME = R2_BUCKET_NAME
+    AWS_S3_ENDPOINT_URL = R2_ENDPOINT_URL
+    AWS_S3_REGION_NAME = 'auto'  # R2 uses 'auto'
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',
+    }
+    AWS_LOCATION = 'media'
+    
+    # Use R2 for media storage
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    
+    # Media URL uses custom domain
+    MEDIA_URL = f'{R2_CUSTOM_DOMAIN}/media/'
+else:
+    # Fallback to local storage
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
