@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Product — Ashesi Market</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .img-preview-strip {
+            display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;
+        }
+        .img-preview-item {
+            position: relative; width: 100px; height: 100px; border-radius: 8px;
+            overflow: hidden; border: 2px solid var(--c-border);
+        }
+        .img-preview-item img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .img-preview-item .remove-img {
+            position: absolute; top: 4px; right: 4px; width: 24px; height: 24px;
+            background: rgba(0,0,0,.7); color: #fff; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1.2rem; line-height: 1;
+        }
+        .existing-images {
+            display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;
+        }
+        .existing-img-item {
+            position: relative; width: 100px; height: 100px; border-radius: 8px;
+            overflow: hidden; border: 2px solid var(--c-border);
+        }
+        .existing-img-item img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .existing-img-item .remove-img {
+            position: absolute; top: 4px; right: 4px; width: 24px; height: 24px;
+            background: rgba(220,0,0,.9); color: #fff; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1.2rem; line-height: 1;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a class="brand" href="index.html">
+                <span class="brand-icon">🛍</span>
+                <span class="brand-text">Ashesi Market</span>
+            </a>
+            <form class="nav-search" onsubmit="event.preventDefault(); searchProducts();">
+                <input type="text" id="search-input" placeholder="Search products, sellers…">
+                <button type="submit">Search</button>
+            </form>
+            <div class="nav-actions">
+                <a class="nav-link" href="login.html" id="nav-login">Log in</a>
+                <a class="btn btn-sm" href="register.html" id="nav-register">Register</a>
+                <a class="nav-link" href="cart.html" id="nav-cart" style="display: none;">
+                    Cart <span class="badge" id="cart-badge" style="display: none;">0</span>
+                </a>
+                <a class="nav-link" href="orders.html" id="nav-orders" style="display: none;">Orders</a>
+                <a class="nav-link" href="profile.html" id="nav-profile" style="display: none;">Profile</a>
+                <a class="btn btn-sm" href="sell.html" id="nav-sell" style="display: none;">+ Sell</a>
+                <a class="nav-link" href="#" onclick="logout(); return false;" id="nav-logout" style="display: none;">Log out</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="card form-card form-wide">
+                <div class="page-header" style="margin-bottom:24px;">
+                    <h1>Edit Product</h1>
+                    <p>Update your product details</p>
+                </div>
+
+                <div id="alert-container"></div>
+
+                <div id="form-container">
+                    <div class="text-center" style="padding: 40px 0;">
+                        <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--c-border); border-top-color: var(--c-accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; <span id="year"></span> Ashesi Market — Ashesi University Student Marketplace</p>
+        </div>
+    </footer>
+
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/mobile-menu.js"></script>
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+        
+        // Require login
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html?redirect=edit-product.html';
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        if (!productId) {
+            window.location.href = 'profile.html';
+        }
+
+        let product = null;
+        let currentUser = null;
+        let selectedFiles = [];
+        let imagesToDelete = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            currentUser = await apiGet(API_ENDPOINTS.currentUser);
+            await loadProduct();
+            await loadCategories();
+        });
+
+        async function loadProduct() {
+            try {
+                product = await apiGet(API_ENDPOINTS.productDetail(productId));
+                
+                // Check if user owns this product
+                if (product.seller.id !== currentUser.id) {
+                    document.getElementById('alert-container').innerHTML = `
+                        <div class="alert alert-error">You don't have permission to edit this product.</div>
+                    `;
+                    setTimeout(() => {
+                        window.location.href = 'profile.html';
+                    }, 2000);
+                    return;
+                }
+                
+                renderForm();
+            } catch (error) {
+                console.error('Error loading product:', error);
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-error">Failed to load product.</div>
+                `;
+            }
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await apiGet(API_ENDPOINTS.categories);
+                const categories = response.results || response;
+                const select = document.getElementById('category-select');
+                if (select) {
+                    categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat.id;
+                        option.textContent = cat.name;
+                        if (product && product.category && cat.id === product.category.id) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        function renderForm() {
+            document.getElementById('form-container').innerHTML = `
+                <form id="product-form" onsubmit="handleSubmit(event)">
+                    <div class="form-group">
+                        <label>Product Title <span style="color:var(--c-warn)">*</span></label>
+                        <input type="text" name="title" required maxlength="200" value="${product.title}" placeholder="e.g. iPhone 13 Pro Max">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description <span style="color:var(--c-warn)">*</span></label>
+                        <textarea name="description" required rows="5" placeholder="Describe your product in detail...">${product.description}</textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Price (GH₵) <span style="color:var(--c-warn)">*</span></label>
+                            <input type="number" name="price" required min="0.01" step="0.01" value="${product.price}" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Quantity Available</label>
+                            <input type="number" name="quantity" min="0" value="${product.quantity}">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category <span style="color:var(--c-warn)">*</span></label>
+                            <select name="category" required id="category-select">
+                                <option value="">Select category</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Condition</label>
+                            <select name="condition">
+                                <option value="new" ${product.condition === 'new' ? 'selected' : ''}>New</option>
+                                <option value="like_new" ${product.condition === 'like_new' ? 'selected' : ''}>Like New</option>
+                                <option value="good" ${product.condition === 'good' ? 'selected' : ''}>Good</option>
+                                <option value="fair" ${product.condition === 'fair' ? 'selected' : ''}>Fair</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Pickup / Location on Campus</label>
+                        <input type="text" name="location" value="${product.location || ''}" placeholder="e.g. Block C, Main Café, Library">
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="is_available" ${product.is_available ? 'checked' : ''}>
+                            Product is available for sale
+                        </label>
+                    </div>
+
+                    ${product.images && product.images.length > 0 ? `
+                        <div class="form-group">
+                            <label>Current Images</label>
+                            <div class="existing-images" id="existing-images">
+                                ${product.images.map(img => `
+                                    <div class="existing-img-item" id="existing-img-${img.id}">
+                                        <img src="${img.image}" alt="Product image">
+                                        <span class="remove-img" onclick="markImageForDeletion(${img.id})">×</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="form-group">
+                        <label>Add New Images (up to 5 total)</label>
+                        <input type="file" id="product-images" name="images" accept="image/*" multiple onchange="previewImages(event)">
+                        <span class="form-hint">JPG/PNG/WebP, max 3MB each.</span>
+                        <div class="img-preview-strip" id="img-preview-strip"></div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button type="submit" class="btn btn-primary" id="submit-btn">Update Product</button>
+                        <a href="profile.html" class="btn btn-outline">Cancel</a>
+                    </div>
+                </form>
+            `;
+            
+            loadCategories();
+        }
+
+        function markImageForDeletion(imageId) {
+            const confirmed = confirm('Are you sure you want to delete this image?');
+            if (!confirmed) return;
+            
+            imagesToDelete.push(imageId);
+            const imgElement = document.getElementById(`existing-img-${imageId}`);
+            if (imgElement) {
+                imgElement.style.opacity = '0.3';
+                imgElement.style.pointerEvents = 'none';
+            }
+        }
+
+        function previewImages(event) {
+            const files = Array.from(event.target.files);
+            const currentImageCount = (product.images?.length || 0) - imagesToDelete.length;
+            const maxNewImages = 5 - currentImageCount;
+            
+            selectedFiles = files.slice(0, maxNewImages);
+            
+            const container = document.getElementById('img-preview-strip');
+            container.innerHTML = '';
+
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const div = document.createElement('div');
+                    div.className = 'img-preview-item';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview ${index + 1}">
+                        <span class="remove-img" onclick="removeImage(${index})">×</span>
+                    `;
+                    container.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removeImage(index) {
+            selectedFiles.splice(index, 1);
+            
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            document.getElementById('product-images').files = dt.files;
+            
+            const event = { target: { files: selectedFiles } };
+            previewImages(event);
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const submitBtn = document.getElementById('submit-btn');
+            const alertContainer = document.getElementById('alert-container');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating...';
+            alertContainer.innerHTML = '';
+
+            try {
+                // Update product data
+                const productData = {
+                    title: form.title.value.trim(),
+                    description: form.description.value.trim(),
+                    price: parseFloat(form.price.value),
+                    quantity: parseInt(form.quantity.value),
+                    category_id: parseInt(form.category.value),
+                    condition: form.condition.value,
+                    location: form.location.value.trim(),
+                    is_available: form.is_available.checked
+                };
+
+                console.log('Updating product:', productData);
+
+                const updatedProduct = await apiPut(API_ENDPOINTS.productDetail(productId), productData);
+
+                console.log('Product updated:', updatedProduct);
+
+                // Delete marked images
+                for (const imageId of imagesToDelete) {
+                    try {
+                        await apiDelete(`${API_ENDPOINTS.productDetail(productId)}/images/${imageId}/`);
+                        console.log(`Image ${imageId} deleted`);
+                    } catch (error) {
+                        console.error(`Failed to delete image ${imageId}:`, error);
+                    }
+                }
+
+                // Upload new images
+                if (selectedFiles.length > 0) {
+                    const token = getAccessToken();
+                    
+                    for (let i = 0; i < selectedFiles.length; i++) {
+                        const formData = new FormData();
+                        formData.append('image', selectedFiles[i]);
+                        formData.append('is_primary', (product.images.length === 0 && i === 0) ? 'true' : 'false');
+
+                        try {
+                            const response = await fetch(API_ENDPOINTS.productUploadImage(productId), {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: formData
+                            });
+                            
+                            if (response.ok) {
+                                console.log(`Image ${i + 1} uploaded successfully`);
+                            }
+                        } catch (imgError) {
+                            console.error('Error uploading image:', imgError);
+                        }
+                    }
+                }
+
+                alertContainer.innerHTML = `
+                    <div class="alert alert-success">Product updated successfully!</div>
+                `;
+                
+                setTimeout(() => {
+                    window.location.href = `product.html?id=${productId}`;
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error updating product:', error);
+                alertContainer.innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>Failed to update product:</strong><br>
+                        ${error.message || 'Please try again.'}
+                    </div>
+                `;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Product';
+            }
+        }
+
+        function searchProducts() {
+            const query = document.getElementById('search-input').value;
+            if (query) {
+                window.location.href = `products.html?q=${encodeURIComponent(query)}`;
+            }
+        }
+    </script>
+</body>
+</html>

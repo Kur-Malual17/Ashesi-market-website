@@ -233,7 +233,7 @@
             const html = `
                 <div class="product-grid">
                     ${products.map(p => `
-                        <div class="card product-card">
+                        <div class="card product-card" id="product-${p.id}">
                             <a href="product.html?id=${p.id}" style="text-decoration:none;color:inherit;">
                                 <div class="thumb">
                                     ${p.primary_image ? 
@@ -250,12 +250,65 @@
                                     <div class="card-price">GH₵ ${parseFloat(p.price).toFixed(2)}</div>
                                 </div>
                             </a>
+                            ${isOwnProfile ? `
+                                <div style="padding:12px;border-top:1px solid var(--c-border);display:flex;gap:8px;">
+                                    <a href="edit-product.html?id=${p.id}" class="btn btn-sm btn-outline" style="flex:1;text-align:center;">
+                                        ✏️ Edit
+                                    </a>
+                                    <button onclick="deleteProduct(${p.id}, '${p.title.replace(/'/g, "\\'")}')" class="btn btn-sm btn-outline" style="flex:1;color:#C00;border-color:#C00;">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                     `).join('')}
                 </div>
             `;
 
             container.innerHTML = html;
+        }
+
+        async function deleteProduct(productId, productTitle) {
+            try {
+                const confirmed = confirm(`Are you sure you want to delete "${productTitle}"? This action cannot be undone.`);
+                
+                if (!confirmed) return;
+                
+                // Delete via API
+                await apiDelete(API_ENDPOINTS.productDetail(productId));
+                
+                // Remove from UI with animation
+                const productCard = document.getElementById(`product-${productId}`);
+                if (productCard) {
+                    productCard.style.transition = 'opacity 0.3s';
+                    productCard.style.opacity = '0';
+                    setTimeout(() => {
+                        productCard.remove();
+                        
+                        // Check if there are any products left
+                        const container = document.getElementById('tab-listings');
+                        const remainingProducts = container.querySelectorAll('.product-card');
+                        if (remainingProducts.length === 0) {
+                            loadListings(); // Re-render to show empty state
+                        }
+                    }, 300);
+                }
+                
+                // Show success message
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-success">Product deleted successfully!</div>
+                `;
+                
+                setTimeout(() => {
+                    document.getElementById('alert-container').innerHTML = '';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Error deleting product:', error);
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-error">Failed to delete product: ${error.message}</div>
+                `;
+            }
         }
 
         function switchTab(tab) {

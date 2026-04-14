@@ -309,7 +309,7 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail=True, methods=['post'])
     def update_status(self, request, pk=None):
-        """Update order status (seller only)"""
+        """Update order status (seller or buyer for cancellation)"""
         order = self.get_object()
         new_status = request.data.get('status')
         
@@ -321,18 +321,37 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
         
         # Check if user is a seller for any items in this order
         is_seller = order.items.filter(seller=request.user).exists()
+        is_buyer = order.buyer == request.user
         
-        if not is_seller:
-            return Response(
-                {'error': 'Only sellers can update order status'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # Buyers can only cancel pending orders
+        if is_buyer and new_status == 'cancelled' and order.status == 'pending':
+            order.status = new_status
+            order.save()
+            
+            # Restore product quantities when buyer cancels
+            for item in order.items.all():
+                product = item.product
+                product.quantity += item.quantity
+                if product.quantity > 0:
+                    product.is_available = True
+                product.save()
+            
+            serializer = self.get_serializer(order)
+            return Response(serializer.data)
         
-        order.status = new_status
-        order.save()
+        # Sellers can update to any status
+        if is_seller:
+            order.status = new_status
+            order.save()
+            
+            serializer = self.get_serializer(order)
+            return Response(serializer.data)
         
-        serializer = self.get_serializer(order)
-        return Response(serializer.data)
+        # If neither buyer cancelling pending nor seller updating
+        return Response(
+            {'error': 'You do not have permission to update this order status'},
+            status=status.HTTP_403_FORBIDDEN
+        )
     
     @action(detail=True, methods=['delete'])
     def remove_order(self, request, pk=None):

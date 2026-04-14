@@ -355,6 +355,7 @@
             const html = purchases.map(order => {
                 const buyerName = order.buyer.name || `${order.buyer.first_name} ${order.buyer.last_name}`;
                 const canReview = order.status === 'completed';
+                const canCancel = order.status === 'pending';
                 
                 return `
                 <div class="card order-card" id="order-purchase-${order.id}">
@@ -395,13 +396,19 @@
                         <span style="color:var(--c-accent);font-size:1.1rem;">GH₵ ${parseFloat(order.total_amount).toFixed(2)}</span>
                     </div>
                     
-                    ${(order.status === 'completed' || order.status === 'cancelled') ? `
-                        <div style="margin-top:16px;">
+                    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+                        ${canCancel ? `
+                            <button onclick="cancelOrder(${order.id})" class="btn btn-outline btn-sm" style="color:#C00;border-color:#C00;">
+                                ✗ Cancel Order
+                            </button>
+                        ` : ''}
+                        
+                        ${(order.status === 'completed' || order.status === 'cancelled') ? `
                             <button onclick="removeOrderFromPurchases(${order.id})" class="btn btn-outline btn-sm" style="color:#666;border-color:#999;">
                                 🗑️ Remove Order
                             </button>
-                        </div>
-                    ` : ''}
+                        ` : ''}
+                    </div>
                 </div>
                 `;
             }).join('');
@@ -675,6 +682,45 @@
                 console.error('Error removing order:', error);
                 document.getElementById('alert-container').innerHTML = `
                     <div class="alert alert-error">Failed to remove order: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function cancelOrder(orderId) {
+            try {
+                const confirmed = await showConfirmModal(
+                    'Are you sure you want to cancel this order? The seller has not approved it yet.',
+                    'Cancel Order',
+                    'Yes, Cancel Order'
+                );
+                
+                if (!confirmed) return;
+                
+                // Cancel order by updating status to cancelled
+                await apiPost(API_ENDPOINTS.orderUpdateStatus(orderId), { status: 'cancelled' });
+                
+                // Update UI
+                const statusBadge = document.querySelector(`#order-purchase-${orderId} .status-pill`);
+                if (statusBadge) {
+                    statusBadge.className = 'status-pill status-cancelled';
+                    statusBadge.textContent = 'cancelled';
+                }
+                
+                // Show success message
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-success">Order cancelled successfully!</div>
+                `;
+                
+                // Reload orders to update buttons
+                setTimeout(() => {
+                    document.getElementById('alert-container').innerHTML = '';
+                    loadOrders();
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error cancelling order:', error);
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-error">Failed to cancel order: ${error.message}</div>
                 `;
             }
         }
