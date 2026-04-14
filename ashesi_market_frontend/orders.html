@@ -101,6 +101,35 @@
         </div>
     </div>
 
+    <!-- Review Modal -->
+    <div id="review-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:500px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+            <h3 style="margin:0 0 8px 0;font-size:1.2rem;">Leave a Review</h3>
+            <p id="review-product-name" style="margin:0 0 20px 0;color:#666;font-size:.9rem;"></p>
+            
+            <div style="margin-bottom:16px;">
+                <label style="display:block;margin-bottom:8px;font-weight:600;">Rating</label>
+                <div id="star-rating" style="display:flex;gap:4px;font-size:2rem;cursor:pointer;">
+                    <span onclick="setRating(1)">☆</span>
+                    <span onclick="setRating(2)">☆</span>
+                    <span onclick="setRating(3)">☆</span>
+                    <span onclick="setRating(4)">☆</span>
+                    <span onclick="setRating(5)">☆</span>
+                </div>
+            </div>
+            
+            <div style="margin-bottom:20px;">
+                <label style="display:block;margin-bottom:8px;font-weight:600;">Comment (optional)</label>
+                <textarea id="review-comment" rows="4" style="width:100%;padding:10px;border:1px solid var(--c-border);border-radius:8px;font-family:inherit;"></textarea>
+            </div>
+            
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button onclick="closeReviewModal()" class="btn btn-outline">Cancel</button>
+                <button onclick="submitReview()" class="btn btn-primary" id="submit-review-btn">Submit Review</button>
+            </div>
+        </div>
+    </div>
+
     <style>
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -132,6 +161,76 @@
             if (confirmResolve) {
                 confirmResolve(result);
                 confirmResolve = null;
+            }
+        }
+
+        // Review modal
+        let currentReviewData = null;
+        let selectedRating = 0;
+
+        function showReviewModal(orderItemId, productTitle, sellerId) {
+            currentReviewData = { orderItemId, sellerId };
+            selectedRating = 0;
+            document.getElementById('review-product-name').textContent = `Product: ${productTitle}`;
+            document.getElementById('review-comment').value = '';
+            updateStarDisplay();
+            document.getElementById('review-modal').style.display = 'flex';
+        }
+
+        function closeReviewModal() {
+            document.getElementById('review-modal').style.display = 'none';
+            currentReviewData = null;
+            selectedRating = 0;
+        }
+
+        function setRating(rating) {
+            selectedRating = rating;
+            updateStarDisplay();
+        }
+
+        function updateStarDisplay() {
+            const stars = document.querySelectorAll('#star-rating span');
+            stars.forEach((star, index) => {
+                star.textContent = index < selectedRating ? '★' : '☆';
+                star.style.color = index < selectedRating ? '#FFB800' : '#DDD';
+            });
+        }
+
+        async function submitReview() {
+            if (selectedRating === 0) {
+                alert('Please select a rating');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-review-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                const reviewData = {
+                    order_item_id: currentReviewData.orderItemId,
+                    rating: selectedRating,
+                    comment: document.getElementById('review-comment').value.trim()
+                };
+
+                await apiPost(API_ENDPOINTS.reviews, reviewData);
+
+                closeReviewModal();
+                
+                document.getElementById('alert-container').innerHTML = `
+                    <div class="alert alert-success">Review submitted successfully!</div>
+                `;
+
+                setTimeout(() => {
+                    document.getElementById('alert-container').innerHTML = '';
+                    loadOrders(); // Reload to show updated review status
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error submitting review:', error);
+                alert('Failed to submit review: ' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Review';
             }
         }
         
@@ -255,6 +354,7 @@
 
             const html = purchases.map(order => {
                 const buyerName = order.buyer.name || `${order.buyer.first_name} ${order.buyer.last_name}`;
+                const canReview = order.status === 'completed';
                 
                 return `
                 <div class="card order-card" id="order-purchase-${order.id}">
@@ -267,10 +367,26 @@
                     </div>
                     ${order.items.map(item => {
                         const sellerName = item.seller.name || `${item.seller.first_name} ${item.seller.last_name}`;
+                        const hasReview = item.review ? true : false;
                         return `
                         <div class="order-item">
-                            <strong>${item.product.title}</strong> · ×${item.quantity} · GH₵ ${parseFloat(item.unit_price * item.quantity).toFixed(2)}
-                            <div class="text-muted" style="font-size:.8rem;">Seller: ${sellerName}</div>
+                            <div style="display:flex;justify-content:space-between;align-items:start;">
+                                <div style="flex:1;">
+                                    <strong>${item.product.title}</strong> · ×${item.quantity} · GH₵ ${parseFloat(item.unit_price * item.quantity).toFixed(2)}
+                                    <div class="text-muted" style="font-size:.8rem;">Seller: ${sellerName}</div>
+                                    ${hasReview ? `
+                                        <div style="margin-top:4px;font-size:.8rem;color:var(--c-success);">
+                                            ✓ Reviewed
+                                        </div>
+                                    ` : canReview ? `
+                                        <div style="margin-top:4px;">
+                                            <button onclick="showReviewModal(${item.id}, '${item.product.title}', ${item.seller.id})" class="btn btn-sm" style="font-size:.75rem;padding:4px 10px;">
+                                                ⭐ Leave Review
+                                            </button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
                         </div>
                         `;
                     }).join('')}
@@ -366,7 +482,7 @@
                         </div>
                         
                         <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
-                            ${waUrl ? `
+                            ${(orderStatus === 'pending' || orderStatus === 'confirmed') && waUrl ? `
                                 <a href="${waUrl}" target="_blank" class="btn btn-wa btn-sm">
                                     📱 WhatsApp Buyer
                                 </a>

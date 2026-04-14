@@ -99,12 +99,18 @@
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
         
-        // Require login
-        if (!isLoggedIn()) {
+        // Require login for own profile, but allow viewing other profiles
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewingUserId = urlParams.get('id');
+        
+        if (!viewingUserId && !isLoggedIn()) {
+            // Viewing own profile without login
             window.location.href = 'login.html?redirect=profile.html';
         }
 
         let currentUser = null;
+        let viewingUser = null;
+        let isOwnProfile = false;
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadProfile();
@@ -112,7 +118,20 @@
 
         async function loadProfile() {
             try {
-                currentUser = await apiGet(API_ENDPOINTS.currentUser);
+                if (isLoggedIn()) {
+                    currentUser = await apiGet(API_ENDPOINTS.currentUser);
+                }
+                
+                if (viewingUserId) {
+                    // Viewing someone else's profile
+                    viewingUser = await apiGet(API_ENDPOINTS.userProfile(viewingUserId));
+                    isOwnProfile = currentUser && currentUser.id === viewingUser.id;
+                } else {
+                    // Viewing own profile
+                    viewingUser = currentUser;
+                    isOwnProfile = true;
+                }
+                
                 renderProfile();
                 await loadListings();
             } catch (error) {
@@ -124,8 +143,9 @@
         }
 
         function renderProfile() {
-            const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-            const rating = currentUser.avg_rating || 0;
+            const user = viewingUser;
+            const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            const rating = user.avg_rating || 0;
             const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
             
             // Format role display
@@ -138,46 +158,51 @@
             document.getElementById('profile-header').innerHTML = `
                 <div class="profile-avatar">${initials}</div>
                 <div style="flex:1;">
-                    <div class="profile-name">${currentUser.name}</div>
+                    <div class="profile-name">${user.name}</div>
                     <div class="profile-meta">
-                        ${currentUser.year_group || 'Year group not set'}
-                        ${rating > 0 ? `· <span class="rating-row" style="display:inline;">${stars} ${rating.toFixed(1)} (${currentUser.review_count || 0} reviews)</span>` : ''}
-                        ${currentUser.is_verified ? '· <span style="color:var(--c-success);">✓ Verified</span>' : ''}
+                        ${user.year_group || 'Year group not set'}
+                        ${rating > 0 ? `· <span class="rating-row" style="display:inline;">${stars} ${rating.toFixed(1)} (${user.review_count || 0} reviews)</span>` : ''}
+                        ${user.is_verified ? '· <span style="color:var(--c-success);">✓ Verified</span>' : ''}
                     </div>
-                    ${currentUser.bio ? `<p style="margin-top:8px;font-size:.9rem;color:var(--c-text);">${currentUser.bio}</p>` : '<p style="margin-top:8px;font-size:.9rem;color:var(--c-muted);font-style:italic;">No bio added yet</p>'}
+                    ${user.bio ? `<p style="margin-top:8px;font-size:.9rem;color:var(--c-text);">${user.bio}</p>` : '<p style="margin-top:8px;font-size:.9rem;color:var(--c-muted);font-style:italic;">No bio added yet</p>'}
                     
                     <!-- Profile Details -->
                     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--c-border);">
                         <div style="display:grid;gap:12px;">
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <span style="font-weight:600;min-width:140px;color:var(--c-muted);font-size:.88rem;">Email:</span>
-                                <span style="font-size:.9rem;">${currentUser.email}</span>
-                            </div>
+                            ${isOwnProfile ? `
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <span style="font-weight:600;min-width:140px;color:var(--c-muted);font-size:.88rem;">Email:</span>
+                                    <span style="font-size:.9rem;">${user.email}</span>
+                                </div>
+                            ` : ''}
                             <div style="display:flex;align-items:center;gap:8px;">
                                 <span style="font-weight:600;min-width:140px;color:var(--c-muted);font-size:.88rem;">WhatsApp:</span>
-                                <span style="font-size:.9rem;">${currentUser.phone_whatsapp || '<span style="color:var(--c-muted);font-style:italic;">Not provided</span>'}</span>
+                                <span style="font-size:.9rem;">${user.phone_whatsapp || '<span style="color:var(--c-muted);font-style:italic;">Not provided</span>'}</span>
                             </div>
                             <div style="display:flex;align-items:center;gap:8px;">
                                 <span style="font-weight:600;min-width:140px;color:var(--c-muted);font-size:.88rem;">Year Group:</span>
-                                <span style="font-size:.9rem;">${currentUser.year_group || '<span style="color:var(--c-muted);font-style:italic;">Not set</span>'}</span>
+                                <span style="font-size:.9rem;">${user.year_group || '<span style="color:var(--c-muted);font-style:italic;">Not set</span>'}</span>
                             </div>
                             <div style="display:flex;align-items:center;gap:8px;">
                                 <span style="font-weight:600;min-width:140px;color:var(--c-muted);font-size:.88rem;">Role:</span>
-                                <span style="font-size:.9rem;">${roleDisplay[currentUser.role] || currentUser.role}</span>
+                                <span style="font-size:.9rem;">${roleDisplay[user.role] || user.role}</span>
                             </div>
                         </div>
                     </div>
                     
-                    <div style="margin-top:16px;">
-                        <a href="profile-edit.html" class="btn btn-primary btn-sm">✏️ Edit Profile</a>
-                    </div>
+                    ${isOwnProfile ? `
+                        <div style="margin-top:16px;">
+                            <a href="profile-edit.html" class="btn btn-primary btn-sm">✏️ Edit Profile</a>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }
 
         async function loadListings() {
             try {
-                const response = await apiGet(`${API_ENDPOINTS.products}?seller=${currentUser.id}`);
+                const userId = viewingUser.id;
+                const response = await apiGet(`${API_ENDPOINTS.products}?seller=${userId}`);
                 const products = response.results || response;
                 renderListings(products);
             } catch (error) {
@@ -193,13 +218,13 @@
 
             if (products.length === 0) {
                 // Check if user can sell
-                const canSell = currentUser && (currentUser.role === 'seller' || currentUser.role === 'both');
+                const canSell = viewingUser && (viewingUser.role === 'seller' || viewingUser.role === 'both');
                 
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="icon">📦</div>
-                        <p>No listings yet.</p>
-                        ${canSell ? '<a href="sell.html" class="btn btn-primary mt-3">List a Product</a>' : ''}
+                        <p>${isOwnProfile ? 'No listings yet.' : 'This seller has no listings yet.'}</p>
+                        ${isOwnProfile && canSell ? '<a href="sell.html" class="btn btn-primary mt-3">List a Product</a>' : ''}
                     </div>
                 `;
                 return;
