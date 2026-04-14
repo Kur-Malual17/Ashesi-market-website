@@ -85,13 +85,15 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     seller = UserProfileSerializer(read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
     category_id = serializers.IntegerField(write_only=True)
+    avg_rating = serializers.FloatField(read_only=True)
+    review_count = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Product
         fields = ['id', 'title', 'description', 'price', 'quantity', 'condition', 
                   'location', 'is_available', 'category', 'category_name', 'category_id', 'seller', 
-                  'images', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'seller', 'created_at', 'updated_at']
+                  'images', 'avg_rating', 'review_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'seller', 'avg_rating', 'review_count', 'created_at', 'updated_at']
     
     def create(self, validated_data):
         validated_data['seller'] = self.context['request'].user
@@ -147,11 +149,13 @@ class ReviewSerializer(serializers.ModelSerializer):
     reviewer = UserProfileSerializer(read_only=True)
     seller = UserProfileSerializer(read_only=True)
     order_item_id = serializers.IntegerField(write_only=True)
+    product_title = serializers.CharField(source='order_item.product.title', read_only=True)
+    product_id = serializers.IntegerField(source='order_item.product.id', read_only=True)
     
     class Meta:
         model = Review
-        fields = ['id', 'order_item_id', 'reviewer', 'seller', 'rating', 'comment', 'created_at']
-        read_only_fields = ['id', 'reviewer', 'seller', 'created_at']
+        fields = ['id', 'order_item_id', 'reviewer', 'seller', 'rating', 'comment', 'created_at', 'product_title', 'product_id']
+        read_only_fields = ['id', 'reviewer', 'seller', 'created_at', 'product_title', 'product_id']
     
     def validate_rating(self, value):
         if not 1 <= value <= 5:

@@ -106,6 +106,19 @@ class Product(models.Model):
             img = self.images.first()
         return img
     
+    @property
+    def avg_rating(self):
+        """Calculate average rating from reviews"""
+        from django.db.models import Avg
+        reviews = Review.objects.filter(order_item__product=self)
+        avg = reviews.aggregate(Avg('rating'))['rating__avg']
+        return round(avg, 2) if avg else 0.0
+    
+    @property
+    def review_count(self):
+        """Count total reviews for this product"""
+        return Review.objects.filter(order_item__product=self).count()
+    
     class Meta:
         db_table = 'market_products'
         ordering = ['-created_at']

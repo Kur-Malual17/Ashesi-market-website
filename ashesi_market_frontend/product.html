@@ -159,7 +159,7 @@
                 }
             }
             await loadProduct();
-            await loadSellerReviews();
+            await loadProductReviews();
         });
 
         async function loadProduct() {
@@ -232,6 +232,12 @@
                             </div>
 
                             <h1>${product.title}</h1>
+                            ${product.avg_rating > 0 ? `
+                                <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                                    <span style="color:#FFB800;font-size:1.1rem;">${'★'.repeat(Math.round(product.avg_rating))}${'☆'.repeat(5 - Math.round(product.avg_rating))}</span>
+                                    <span style="font-size:.9rem;color:var(--c-muted);">${product.avg_rating.toFixed(1)} (${product.review_count} ${product.review_count === 1 ? 'review' : 'reviews'})</span>
+                                </div>
+                            ` : ''}
                             <div class="product-price">GH₵ ${parseFloat(product.price).toFixed(2)}</div>
 
                             ${product.location ? `<div class="text-muted" style="font-size:.88rem;">📍 ${product.location}</div>` : ''}
@@ -279,9 +285,9 @@
                     <div style="white-space:pre-wrap;line-height:1.7;">${product.description}</div>
                 </div>
 
-                <!-- Seller Reviews -->
-                <div class="card" style="padding:24px;margin-top:28px;" id="seller-reviews-section">
-                    <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:16px;">Seller Reviews (<span id="review-count">0</span>)</h2>
+                <!-- Product Reviews -->
+                <div class="card" style="padding:24px;margin-top:28px;" id="product-reviews-section">
+                    <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:16px;">Product Reviews (<span id="review-count">0</span>)</h2>
                     <div id="reviews-container">
                         <div class="text-center" style="padding: 20px 0;">
                             <div style="display: inline-block; width: 30px; height: 30px; border: 3px solid var(--c-border); border-top-color: var(--c-accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
@@ -347,14 +353,14 @@
             }
         }
 
-        async function loadSellerReviews() {
-            if (!product || !product.seller) return;
+        async function loadProductReviews() {
+            if (!product) return;
             
             try {
-                const response = await apiGet(`${API_ENDPOINTS.reviews}?seller_id=${product.seller.id}`);
+                const response = await apiGet(`${API_ENDPOINTS.reviews}?product_id=${product.id}`);
                 const reviews = response.results || response;
                 
-                console.log('Seller reviews loaded:', reviews);
+                console.log('Product reviews loaded:', reviews);
                 
                 renderReviews(reviews);
             } catch (error) {
@@ -378,7 +384,8 @@
             if (reviews.length === 0) {
                 container.innerHTML = `
                     <div class="no-reviews">
-                        <p>No reviews yet</p>
+                        <p>No reviews yet for this product</p>
+                        <p style="font-size:.85rem;margin-top:8px;color:var(--c-muted);">Be the first to review this product after purchasing!</p>
                     </div>
                 `;
                 return;

@@ -457,10 +457,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        queryset = Review.objects.all()
+        queryset = Review.objects.all().select_related('reviewer', 'seller', 'order_item__product')
+        
+        # Filter by seller
         seller_id = self.request.query_params.get('seller_id')
         if seller_id:
             queryset = queryset.filter(seller_id=seller_id)
+        
+        # Filter by product
+        product_id = self.request.query_params.get('product_id')
+        if product_id:
+            queryset = queryset.filter(order_item__product_id=product_id)
+        
         return queryset
     
     def perform_create(self, serializer):
