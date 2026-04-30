@@ -369,12 +369,21 @@
                     ${order.items.map(item => {
                         const sellerName = item.seller.name || `${item.seller.first_name} ${item.seller.last_name}`;
                         const hasReview = item.review ? true : false;
+                        const productImage = item.product.primary_image || 'https://via.placeholder.com/80x80?text=No+Image';
                         return `
                         <div class="order-item">
-                            <div style="display:flex;justify-content:space-between;align-items:start;">
+                            <div style="display:flex;gap:12px;align-items:start;">
+                                <img src="${productImage}" alt="${item.product.title}" 
+                                     style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;">
                                 <div style="flex:1;">
-                                    <strong>${item.product.title}</strong> · ×${item.quantity} · GH₵ ${parseFloat(item.unit_price * item.quantity).toFixed(2)}
-                                    <div class="text-muted" style="font-size:.8rem;">Seller: ${sellerName}</div>
+                                    <strong>${item.product.title}</strong>
+                                    <div style="margin-top:4px;color:var(--c-muted);font-size:.85rem;">
+                                        Quantity: ${item.quantity} · Unit Price: GH₵ ${parseFloat(item.unit_price).toFixed(2)}
+                                    </div>
+                                    <div style="margin-top:4px;font-weight:600;color:var(--c-accent);">
+                                        Subtotal: GH₵ ${parseFloat(item.unit_price * item.quantity).toFixed(2)}
+                                    </div>
+                                    <div class="text-muted" style="font-size:.8rem;margin-top:4px;">Seller: ${sellerName}</div>
                                     ${hasReview ? `
                                         <div style="margin-top:4px;font-size:.8rem;color:var(--c-success);">
                                             ✓ Reviewed
@@ -480,11 +489,20 @@
                         </div>
                         ${items.map(item => {
                             const hasReview = item.review ? true : false;
+                            const productImage = item.product.primary_image || 'https://via.placeholder.com/80x80?text=No+Image';
                             return `
                             <div class="order-item">
-                                <div style="display:flex;justify-content:space-between;align-items:start;">
+                                <div style="display:flex;gap:12px;align-items:start;">
+                                    <img src="${productImage}" alt="${item.product.title}" 
+                                         style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;">
                                     <div style="flex:1;">
-                                        <strong>${item.product.title}</strong> · ×${item.quantity} · GH₵ ${parseFloat(item.unit_price * item.quantity).toFixed(2)}
+                                        <strong>${item.product.title}</strong>
+                                        <div style="margin-top:4px;color:var(--c-muted);font-size:.85rem;">
+                                            Quantity: ${item.quantity} · Unit Price: GH₵ ${parseFloat(item.unit_price).toFixed(2)}
+                                        </div>
+                                        <div style="margin-top:4px;font-weight:600;color:var(--c-accent);">
+                                            Subtotal: GH₵ ${parseFloat(item.unit_price * item.quantity).toFixed(2)}
+                                        </div>
                                         ${hasReview ? `
                                             <div style="margin-top:8px;padding:10px;background:#F8F9FA;border-radius:6px;border-left:3px solid #FFB800;">
                                                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
