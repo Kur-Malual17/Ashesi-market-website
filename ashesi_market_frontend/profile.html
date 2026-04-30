@@ -155,7 +155,16 @@
         function renderProfile() {
             const user = viewingUser;
             const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-            const rating = parseFloat(user.avg_rating) || 0;
+            
+            // Robust rating conversion - handle string, number, null, undefined
+            let rating = 0;
+            if (user.avg_rating !== null && user.avg_rating !== undefined) {
+                rating = Number(user.avg_rating);
+                if (isNaN(rating)) {
+                    rating = 0;
+                }
+            }
+            
             const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
             
             // Format role display

@@ -42,8 +42,6 @@ class User(AbstractUser):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='buyer')
     is_verified = models.BooleanField(default=False)
     profile_complete = models.BooleanField(default=False)
-    avg_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
-    review_count = models.IntegerField(default=0)
     
     # Use email as username
     USERNAME_FIELD = 'email'
@@ -51,6 +49,19 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.get_full_name()} ({self.email})"
+    
+    @property
+    def avg_rating(self):
+        """Calculate average rating from reviews received"""
+        from django.db.models import Avg
+        reviews = self.reviews_received.all()
+        avg = reviews.aggregate(Avg('rating'))['rating__avg']
+        return round(avg, 2) if avg else 0.0
+    
+    @property
+    def review_count(self):
+        """Count total reviews received"""
+        return self.reviews_received.count()
     
     class Meta:
         db_table = 'market_users'
