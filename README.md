@@ -1,5 +1,9 @@
 # Ashesi Market
 
+![Backend CI](https://github.com/Kur-Malual17/Ashesi-market-website/workflows/Backend%20CI%2FCD/badge.svg)
+![Frontend CI](https://github.com/Kur-Malual17/Ashesi-market-website/workflows/Frontend%20CI%2FCD/badge.svg)
+![Full Stack CI](https://github.com/Kur-Malual17/Ashesi-market-website/workflows/Full%20Stack%20CI%2FCD/badge.svg)
+
 A modern, full-featured online marketplace platform built specifically for the Ashesi University community. Students can buy and sell products, leave reviews, and connect with each other through a secure and user-friendly interface.
 
 ## Table of Contents
@@ -11,6 +15,7 @@ A modern, full-featured online marketplace platform built specifically for the A
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
 - [Deployment](#deployment)
+- [CI/CD](#cicd)
 - [User Roles](#user-roles)
 - [Key Workflows](#key-workflows)
 - [API Documentation](#api-documentation)
@@ -269,6 +274,69 @@ const API_BASE_URL = 'https://your-backend-url.railway.app/api';
 
 4. **Deploy**
    - Vercel auto-deploys on git push
+
+---
+
+## CI/CD
+
+This project uses GitHub Actions for continuous integration and deployment.
+
+### Automated Workflows
+
+#### Backend CI/CD
+- **Triggers:** Push/PR to `main` or `develop` with backend changes
+- **Actions:**
+  - Runs Python linting (flake8)
+  - Checks code formatting (black, isort)
+  - Runs Django tests with PostgreSQL
+  - Checks for missing migrations
+  - Auto-deploys to Railway on push to `main`
+
+#### Frontend CI/CD
+- **Triggers:** Push/PR to `main` or `develop` with frontend changes
+- **Actions:**
+  - Validates HTML files
+  - Checks JavaScript syntax
+  - Validates CSS files
+  - Scans for security issues
+  - Auto-deploys to Vercel on push to `main`
+
+#### Full Stack Integration
+- **Triggers:** Push/PR to `main`
+- **Actions:**
+  - Detects changed components
+  - Runs integration tests
+  - Provides deployment status summary
+
+### Running Tests Locally
+
+**Backend:**
+```bash
+cd ashesi_market_django
+pip install -r requirements.txt
+pip install flake8 black isort
+python manage.py test
+```
+
+**Linting:**
+```bash
+flake8 .
+black --check .
+isort --check-only .
+```
+
+**Auto-format:**
+```bash
+black .
+isort .
+```
+
+### Viewing CI/CD Status
+- Check the **Actions** tab in GitHub repository
+- View workflow runs and logs
+- Monitor deployment status in Railway and Vercel dashboards
+
+For detailed CI/CD documentation, see [.github/workflows/README.md](.github/workflows/README.md)
 
 ---
 

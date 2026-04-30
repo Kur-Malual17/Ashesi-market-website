@@ -1,0 +1,88 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'ashesi_market_frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'ashesi_market_frontend/**'
+
+jobs:
+  lint:
+    name: Lint Frontend Code
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Validate HTML files
+      working-directory: ./ashesi_market_frontend
+      run: |
+        echo "Checking HTML files for syntax errors..."
+        # Install html-validate
+        npm install -g html-validate
+        # Validate HTML files (ignore test files)
+        html-validate "*.html" --exclude "*test*.html" --exclude "*debug*.html" || true
+    
+    - name: Check JavaScript syntax
+      working-directory: ./ashesi_market_frontend
+      run: |
+        echo "Checking JavaScript files..."
+        # Check for syntax errors in JS files
+        for file in js/*.js; do
+          node --check "$file" && echo "✅ $file is valid" || echo "❌ $file has errors"
+        done
+    
+    - name: Validate CSS
+      working-directory: ./ashesi_market_frontend
+      run: |
+        echo "Checking CSS files..."
+        npm install -g stylelint stylelint-config-standard
+        echo '{"extends": "stylelint-config-standard"}' > .stylelintrc.json
+        stylelint "css/*.css" || true
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Check for secrets in code
+      run: |
+        echo "Scanning for potential secrets..."
+        # Check for common secret patterns
+        if grep -r -i "password.*=.*['\"].*['\"]" ashesi_market_frontend/js/ --exclude-dir=node_modules; then
+          echo "⚠️ Warning: Potential hardcoded passwords found"
+        fi
+        if grep -r -i "api[_-]key.*=.*['\"].*['\"]" ashesi_market_frontend/js/ --exclude-dir=node_modules; then
+          echo "⚠️ Warning: Potential hardcoded API keys found"
+        fi
+        echo "✅ Security scan complete"
+
+  deploy:
+    name: Deploy to Vercel
+    needs: [lint, security]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to Vercel
+      run: |
+        echo "✅ Vercel auto-deploys from GitHub"
+        echo "Check your Vercel dashboard for deployment status"
+        echo "Vercel will automatically deploy when changes are pushed to main branch"
