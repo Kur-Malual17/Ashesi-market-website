@@ -175,22 +175,24 @@ Ashesi Market Team
             logger.info(f"Password reset email sent successfully to {email}")
             return Response({
                 'message': 'Password reset email sent. Please check your inbox.',
-                'email': email
+                'email': email,
+                'success': True
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
             logger.error(f"Email sending failed for {email}: {str(e)}", exc_info=True)
-            # Return success anyway for security (don't reveal if email exists)
+            # Still return 200 for security, but with generic message
             return Response({
                 'message': 'If an account exists with this email, you will receive a password reset link.',
-                'debug': str(e) if settings.DEBUG else None
+                'success': True  # Always return success for security
             }, status=status.HTTP_200_OK)
     
     except User.DoesNotExist:
         logger.info(f"Password reset requested for non-existent email: {email}")
         # Don't reveal if user exists or not (security)
         return Response({
-            'message': 'If an account exists with this email, you will receive a password reset link.'
+            'message': 'If an account exists with this email, you will receive a password reset link.',
+            'success': True
         }, status=status.HTTP_200_OK)
 
 
