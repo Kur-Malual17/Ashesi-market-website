@@ -121,8 +121,9 @@ def request_password_reset(request):
     from django.contrib.auth.tokens import default_token_generator
     from django.core.mail import send_mail
     from django.conf import settings
-    import secrets
+    import logging
     
+    logger = logging.getLogger(__name__)
     email = request.data.get('email', '').lower().strip()
     
     if not email:
@@ -158,6 +159,11 @@ Ashesi Market Team
         """
         
         try:
+            logger.info(f"Attempting to send password reset email to {email}")
+            logger.info(f"Email backend: {settings.EMAIL_BACKEND}")
+            logger.info(f"Email host: {settings.EMAIL_HOST}")
+            logger.info(f"Email from: {settings.DEFAULT_FROM_EMAIL}")
+            
             send_mail(
                 subject,
                 message,
@@ -166,13 +172,14 @@ Ashesi Market Team
                 fail_silently=False,
             )
             
+            logger.info(f"Password reset email sent successfully to {email}")
             return Response({
                 'message': 'Password reset email sent. Please check your inbox.',
                 'email': email
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
-            print(f"Email sending failed: {str(e)}")
+            logger.error(f"Email sending failed for {email}: {str(e)}", exc_info=True)
             # Return success anyway for security (don't reveal if email exists)
             return Response({
                 'message': 'If an account exists with this email, you will receive a password reset link.',
@@ -180,6 +187,7 @@ Ashesi Market Team
             }, status=status.HTTP_200_OK)
     
     except User.DoesNotExist:
+        logger.info(f"Password reset requested for non-existent email: {email}")
         # Don't reveal if user exists or not (security)
         return Response({
             'message': 'If an account exists with this email, you will receive a password reset link.'
