@@ -13,15 +13,44 @@ def api_root(request):
     return JsonResponse({
         'message': 'Ashesi Market API',
         'version': '1.0',
-        'frontend': 'http://localhost:8080',
+        'status': 'running',
+        'frontend': 'https://ashesi-market-website.vercel.app',
         'admin': '/admin/',
+        'documentation': {
+            'postman_collection': 'See README.md for Postman testing guide',
+            'endpoints': 'See /api/ for available endpoints'
+        },
         'api_endpoints': {
-            'auth': '/api/auth/',
-            'products': '/api/products/',
+            'auth': {
+                'register': '/api/auth/register/',
+                'login': '/api/auth/login/',
+                'current_user': '/api/auth/user/',
+                'token_refresh': '/api/auth/token/refresh/',
+            },
+            'products': {
+                'list': '/api/products/',
+                'detail': '/api/products/{id}/',
+                'create': '/api/products/ (POST)',
+                'update': '/api/products/{id}/ (PUT)',
+                'delete': '/api/products/{id}/ (DELETE)',
+            },
             'categories': '/api/categories/',
-            'cart': '/api/cart/',
-            'orders': '/api/orders/',
-            'reviews': '/api/reviews/',
+            'cart': {
+                'view': '/api/cart/',
+                'add': '/api/cart/add/',
+                'remove': '/api/cart/remove/{id}/',
+            },
+            'orders': {
+                'list': '/api/orders/',
+                'checkout': '/api/checkout/',
+                'detail': '/api/orders/{id}/',
+                'update_status': '/api/orders/{id}/update_status/',
+            },
+            'reviews': {
+                'list': '/api/reviews/',
+                'create': '/api/reviews/',
+                'by_product': '/api/reviews/?product_id={id}',
+            },
         }
     })
 
