@@ -69,58 +69,34 @@ def register_view(request):
 @permission_classes([AllowAny])
 def login_view(request):
     """User login with JWT tokens"""
-    email = request.data.get('email', '').lower()
+    email = request.data.get('email', '').lower().strip()
     password = request.data.get('password', '')
     
+    print(f"Login attempt for: {email}")  # Debug
+    
+    if not email or not password:
+        return Response({
+            'error': 'Email and password are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Authenticate user
     user = authenticate(request, username=email, password=password)
     
     if user:
+        print(f"Login successful for: {email}")  # Debug
         tokens = get_tokens_for_user(user)
         return Response({
             'user': UserProfileSerializer(user).data,
             'tokens': tokens,
             'message': 'Login successful'
-        })
+        }, status=status.HTTP_200_OK)
     
+    print(f"Login failed for: {email}")  # Debug
     return Response({
         'error': 'Invalid credentials'
     }, status=status.HTTP_401_UNAUTHORIZED)
-    
-    print(f"Login attempt for: {email}")  # Debug
-    
-    user = authenticate(request, username=email, password=password)
-    
-    if user:
-        login(request, user)
-        print(f"Login successful for: {email}")  # Debug
-        print(f"Session key: {request.session.session_key}")  # Debug
-        
-        # Force session save
-        request.session.save()
-        
-        response = Response({
-            'user': UserProfileSerializer(user).data,
-            'message': 'Login successful'
-        })
-        
-        # Explicitly set session cookie in response
-        response.set_cookie(
-            'sessionid',
-            request.session.session_key,
-            max_age=1209600,  # 2 weeks
-            httponly=False,
-            samesite=None,
-            secure=False
-        )
-        
-        print(f"Response cookies: {response.cookies}")  # Debug
-        return response
-    
-    print(f"Login failed for: {email}")  # Debug
-    return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-@api_view(['POST'])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
