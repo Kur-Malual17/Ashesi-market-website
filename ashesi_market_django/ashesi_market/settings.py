@@ -249,15 +249,27 @@ SIMPLE_JWT = {
 }
 
 # CORS Settings
-# Allow all origins in development, specific origins in production
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = True
-else:
-    CORS_ALLOWED_ORIGINS = config(
-        'CORS_ALLOWED_ORIGINS',
-        default="http://localhost:3000,http://localhost:8000,http://localhost:8080,http://127.0.0.1:8080,http://127.0.0.1:5500,http://localhost:5500,https://ashesi-market-website.vercel.app"
-    ).split(',')
+# Get CORS origins from environment or use defaults
+CORS_ALLOWED_ORIGINS_STR = config(
+    'CORS_ALLOWED_ORIGINS',
+    default="http://localhost:3000,http://localhost:8000,http://localhost:8080,http://127.0.0.1:8080,http://127.0.0.1:5500,http://localhost:5500,https://ashesi-market-website.vercel.app"
+)
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS_STR.split(',')]
 CORS_ALLOW_CREDENTIALS = True
+
+# Also allow all origins if explicitly set
+if config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool):
+    CORS_ALLOW_ALL_ORIGINS = True
+
+# Ensure all necessary headers are allowed
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
