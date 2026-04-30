@@ -21,6 +21,11 @@ urlpatterns = [
     path('auth/logout/', views.logout_view, name='logout'),
     path('auth/user/', views.current_user_view, name='current-user'),
     
+    # Password Reset
+    path('auth/password-reset/request/', views.request_password_reset, name='request-password-reset'),
+    path('auth/password-reset/confirm/', views.reset_password, name='reset-password'),
+    path('auth/password-change/', views.change_password, name='change-password'),
+    
     # Profile
     path('profile/', views.profile_view, name='profile'),
     path('users/<int:user_id>/', views.user_profile_public, name='user-profile'),

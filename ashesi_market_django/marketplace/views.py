@@ -113,6 +113,168 @@ def current_user_view(request):
     return Response(UserProfileSerializer(request.user).data)
 
 
+# Password Reset Views
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def request_password_reset(request):
+    """Request password reset - sends email with reset token"""
+    from django.contrib.auth.tokens import default_token_generator
+    from django.core.mail import send_mail
+    from django.conf import settings
+    import secrets
+    
+    email = request.data.get('email', '').lower().strip()
+    
+    if not email:
+        return Response({
+            'error': 'Email is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        user = User.objects.get(email=email)
+        
+        # Generate reset token
+        token = default_token_generator.make_token(user)
+        
+        # Create reset link (frontend URL)
+        reset_link = f"https://ashesi-market-website.vercel.app/reset-password.html?token={token}&uid={user.id}"
+        
+        # Send email
+        subject = 'Password Reset - Ashesi Market'
+        message = f"""
+Hello {user.first_name},
+
+You requested to reset your password for Ashesi Market.
+
+Click the link below to reset your password:
+{reset_link}
+
+This link will expire in 24 hours.
+
+If you didn't request this, please ignore this email.
+
+Best regards,
+Ashesi Market Team
+        """
+        
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+            
+            return Response({
+                'message': 'Password reset email sent. Please check your inbox.',
+                'email': email
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(f"Email sending failed: {str(e)}")
+            # Return success anyway for security (don't reveal if email exists)
+            return Response({
+                'message': 'If an account exists with this email, you will receive a password reset link.',
+                'debug': str(e) if settings.DEBUG else None
+            }, status=status.HTTP_200_OK)
+    
+    except User.DoesNotExist:
+        # Don't reveal if user exists or not (security)
+        return Response({
+            'message': 'If an account exists with this email, you will receive a password reset link.'
+        }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password(request):
+    """Reset password using token from email"""
+    from django.contrib.auth.tokens import default_token_generator
+    
+    token = request.data.get('token')
+    uid = request.data.get('uid')
+    new_password = request.data.get('new_password')
+    confirm_password = request.data.get('confirm_password')
+    
+    if not all([token, uid, new_password, confirm_password]):
+        return Response({
+            'error': 'All fields are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    if new_password != confirm_password:
+        return Response({
+            'error': 'Passwords do not match'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    if len(new_password) < 8:
+        return Response({
+            'error': 'Password must be at least 8 characters long'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        user = User.objects.get(id=uid)
+        
+        # Verify token
+        if not default_token_generator.check_token(user, token):
+            return Response({
+                'error': 'Invalid or expired reset link'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Set new password
+        user.set_password(new_password)
+        user.save()
+        
+        return Response({
+            'message': 'Password reset successful. You can now login with your new password.'
+        }, status=status.HTTP_200_OK)
+        
+    except User.DoesNotExist:
+        return Response({
+            'error': 'Invalid reset link'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    """Change password for logged-in user"""
+    current_password = request.data.get('current_password')
+    new_password = request.data.get('new_password')
+    confirm_password = request.data.get('confirm_password')
+    
+    if not all([current_password, new_password, confirm_password]):
+        return Response({
+            'error': 'All fields are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    if new_password != confirm_password:
+        return Response({
+            'error': 'New passwords do not match'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    if len(new_password) < 8:
+        return Response({
+            'error': 'Password must be at least 8 characters long'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    user = request.user
+    
+    # Check current password
+    if not user.check_password(current_password):
+        return Response({
+            'error': 'Current password is incorrect'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Set new password
+    user.set_password(new_password)
+    user.save()
+    
+    return Response({
+        'message': 'Password changed successfully'
+    }, status=status.HTTP_200_OK)
+
+
 
 # Category ViewSet
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
