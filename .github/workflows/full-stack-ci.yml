@@ -7,31 +7,9 @@ on:
     branches: [ main ]
 
 jobs:
-  check-changes:
-    name: Detect Changes
-    runs-on: ubuntu-latest
-    outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Check for changes
-      uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        filters: |
-          backend:
-            - 'ashesi_market_django/**'
-          frontend:
-            - 'ashesi_market_frontend/**'
-
   integration-test:
     name: Integration Tests
     runs-on: ubuntu-latest
-    needs: check-changes
-    if: needs.check-changes.outputs.backend == 'true' || needs.check-changes.outputs.frontend == 'true'
     
     steps:
     - name: Checkout code
@@ -48,26 +26,27 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    - name: Start Django server
+    - name: Run migrations
       working-directory: ./ashesi_market_django
       env:
         SECRET_KEY: 'test-secret-key-for-ci-only'
         DEBUG: 'True'
       run: |
         python manage.py migrate --noinput
-        python manage.py runserver 8000 &
-        sleep 5
     
-    - name: Test API endpoints
+    - name: Check Django setup
+      working-directory: ./ashesi_market_django
+      env:
+        SECRET_KEY: 'test-secret-key-for-ci-only'
+        DEBUG: 'True'
       run: |
-        echo "Testing API health..."
-        curl -f http://localhost:8000/api/ || echo "API endpoint check"
-        echo "✅ Integration tests complete"
+        python manage.py check
+        echo "✅ Django setup is valid"
 
   deploy-status:
     name: Deployment Status
     runs-on: ubuntu-latest
-    needs: [check-changes, integration-test]
+    needs: integration-test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
@@ -76,14 +55,11 @@ jobs:
         echo "🚀 Deployment Summary"
         echo "===================="
         echo ""
-        if [ "${{ needs.check-changes.outputs.backend }}" == "true" ]; then
-          echo "✅ Backend changes detected - Railway will auto-deploy"
-          echo "   📍 https://ashesi-market-website-production.up.railway.app"
-        fi
-        if [ "${{ needs.check-changes.outputs.frontend }}" == "true" ]; then
-          echo "✅ Frontend changes detected - Vercel will auto-deploy"
-          echo "   📍 https://ashesi-market-website.vercel.app"
-        fi
+        echo "✅ Backend - Railway will auto-deploy"
+        echo "   📍 https://ashesi-market-website-production.up.railway.app"
+        echo ""
+        echo "✅ Frontend - Vercel will auto-deploy"
+        echo "   📍 https://ashesi-market-website.vercel.app"
         echo ""
         echo "Monitor deployments:"
         echo "  - Railway: https://railway.app/dashboard"

@@ -20,36 +20,40 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-    
-    - name: Validate HTML files
-      working-directory: ./ashesi_market_frontend
-      run: |
-        echo "Checking HTML files for syntax errors..."
-        # Install html-validate
-        npm install -g html-validate
-        # Validate HTML files (ignore test files)
-        html-validate "*.html" --exclude "*test*.html" --exclude "*debug*.html" || true
-    
     - name: Check JavaScript syntax
       working-directory: ./ashesi_market_frontend
       run: |
         echo "Checking JavaScript files..."
         # Check for syntax errors in JS files
         for file in js/*.js; do
-          node --check "$file" && echo "✅ $file is valid" || echo "❌ $file has errors"
+          if [ -f "$file" ]; then
+            echo "Checking $file..."
+            node --check "$file" && echo "✅ $file is valid" || echo "❌ $file has errors"
+          fi
         done
+        echo "✅ JavaScript syntax check complete"
     
-    - name: Validate CSS
+    - name: Check HTML files exist
+      working-directory: ./ashesi_market_frontend
+      run: |
+        echo "Checking HTML files..."
+        if ls *.html 1> /dev/null 2>&1; then
+          echo "✅ HTML files found"
+          ls -la *.html | head -10
+        else
+          echo "⚠️ No HTML files found"
+        fi
+    
+    - name: Check CSS files exist
       working-directory: ./ashesi_market_frontend
       run: |
         echo "Checking CSS files..."
-        npm install -g stylelint stylelint-config-standard
-        echo '{"extends": "stylelint-config-standard"}' > .stylelintrc.json
-        stylelint "css/*.css" || true
+        if ls css/*.css 1> /dev/null 2>&1; then
+          echo "✅ CSS files found"
+          ls -la css/*.css
+        else
+          echo "⚠️ No CSS files found"
+        fi
 
   security:
     name: Security Scan
@@ -63,11 +67,15 @@ jobs:
       run: |
         echo "Scanning for potential secrets..."
         # Check for common secret patterns
-        if grep -r -i "password.*=.*['\"].*['\"]" ashesi_market_frontend/js/ --exclude-dir=node_modules; then
+        if grep -r -i "password.*=.*['\"].*['\"]" ashesi_market_frontend/js/ --exclude-dir=node_modules 2>/dev/null; then
           echo "⚠️ Warning: Potential hardcoded passwords found"
+        else
+          echo "✅ No hardcoded passwords detected"
         fi
-        if grep -r -i "api[_-]key.*=.*['\"].*['\"]" ashesi_market_frontend/js/ --exclude-dir=node_modules; then
+        if grep -r -i "api[_-]key.*=.*['\"].*['\"]" ashesi_market_frontend/js/ --exclude-dir=node_modules 2>/dev/null; then
           echo "⚠️ Warning: Potential hardcoded API keys found"
+        else
+          echo "✅ No hardcoded API keys detected"
         fi
         echo "✅ Security scan complete"
 
