@@ -11,13 +11,17 @@ class UserAdmin(BaseUserAdmin):
     list_display = ['email', 'first_name', 'last_name', 'role', 'is_verified', 'profile_complete', 'avg_rating']
     list_filter = ['role', 'is_verified', 'profile_complete', 'is_staff']
     search_fields = ['email', 'first_name', 'last_name', 'phone_whatsapp']
+    readonly_fields = ['avg_rating', 'review_count']
     
     fieldsets = BaseUserAdmin.fieldsets + (
         ('Profile Information', {
             'fields': ('phone_whatsapp', 'year_group', 'bio', 'id_image', 'role')
         }),
         ('Status', {
-            'fields': ('is_verified', 'profile_complete', 'avg_rating', 'review_count')
+            'fields': ('is_verified', 'profile_complete')
+        }),
+        ('Statistics', {
+            'fields': ('avg_rating', 'review_count')
         }),
     )
 
