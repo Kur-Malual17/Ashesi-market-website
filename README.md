@@ -20,29 +20,29 @@ Ashesi Market connects students who want to buy and sell products within the uni
 ## ✨ Key Features
 
 ### For Buyers
-- 🔍 **Browse & Search** - Find products by category, condition, or search terms
-- 🛒 **Shopping Cart** - Add multiple items and checkout seamlessly
-- 📦 **Order Tracking** - Monitor your purchases from pending to completed
-- ⭐ **Reviews** - Rate and review products after purchase
-- 💬 **WhatsApp Integration** - Contact sellers directly via WhatsApp
+- **Browse & Search** - Find products by category, condition, or search terms
+- **Shopping Cart** - Add multiple items and checkout seamlessly
+- **Order Tracking** - Monitor your purchases from pending to completed
+- **Reviews** - Rate and review products after purchase
+- **WhatsApp Integration** - Contact sellers directly via WhatsApp
 
 ### For Sellers
-- 📝 **List Products** - Create listings with images, descriptions, and pricing
-- 📊 **Sales Dashboard** - Manage orders and track earnings
-- ✅ **Order Management** - Approve, confirm, or cancel orders
-- 📱 **Buyer Communication** - Connect with buyers via WhatsApp
-- 🖼️ **Image Upload** - Add up to 5 images per product
+- **List Products** - Create listings with images, descriptions, and pricing
+- **Sales Dashboard** - Manage orders and track earnings
+- **Order Management** - Approve, confirm, or cancel orders
+- **Buyer Communication** - Connect with buyers via WhatsApp
+- **Image Upload** - Add up to 5 images per product
 
 ### For Everyone
-- 🔐 **Secure Authentication** - JWT-based login system
-- 👤 **User Profiles** - Manage your account and view ratings
-- 🎭 **Flexible Roles** - Be a buyer, seller, or both
-- 📱 **Responsive Design** - Works on desktop, tablet, and mobile
-- 🔔 **Real-time Updates** - Get instant feedback on actions
+- **Secure Authentication** - JWT-based login system
+- **User Profiles** - Manage your account and view ratings
+- **Flexible Roles** - Be a buyer, seller, or both
+- **Responsive Design** - Works on desktop, tablet, and mobile
+- **Real-time Updates** - Get instant feedback on actions
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Create an Account
 
@@ -162,23 +162,23 @@ After registration:
 ## 💡 Tips for Success
 
 ### For Buyers
-- ✅ Check seller ratings and reviews before purchasing
-- ✅ Read product descriptions carefully
-- ✅ Contact seller via WhatsApp to ask questions
-- ✅ Inspect items before completing the transaction
-- ✅ Leave honest reviews to help the community
+- Check seller ratings and reviews before purchasing
+- Read product descriptions carefully
+- Contact seller via WhatsApp to ask questions
+- Inspect items before completing the transaction
+- Leave honest reviews to help the community
 
 ### For Sellers
-- ✅ Take clear, well-lit photos of your items
-- ✅ Write detailed, honest descriptions
-- ✅ Price items competitively
-- ✅ Respond quickly to buyer inquiries
-- ✅ Be honest about item condition
-- ✅ Arrange safe meeting locations on campus
+- Take clear, well-lit photos of your items
+- Write detailed, honest descriptions
+- Price items competitively
+- Respond quickly to buyer inquiries
+- Be honest about item condition
+- Arrange safe meeting locations on campus
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Frontend
 - **HTML5, CSS3, JavaScript** - Modern web technologies
@@ -200,7 +200,7 @@ After registration:
 
 ---
 
-## 📊 Order Status Guide
+## Order Status Guide
 
 | Status | Meaning | Next Steps |
 |--------|---------|------------|
@@ -237,7 +237,7 @@ After registration:
 
 ---
 
-## 📈 Project Statistics
+## Project Statistics
 
 - **Built for**: Ashesi University Community
 - **User Roles**: 3 (Buyer, Seller, Both)
@@ -260,7 +260,7 @@ This project is built for educational purposes as part of the Ashesi University 
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Ashesi University** - For providing the educational environment
 - **Django Community** - For the excellent web framework
@@ -278,6 +278,6 @@ This project is built for educational purposes as part of the Ashesi University 
 
 ---
 
-**Made with ❤️ for the Ashesi University Community**
+**Made for the Ashesi University Community**
 
 *Last Updated: April 2026*
