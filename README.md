@@ -1,554 +1,283 @@
-# Ashesi Market
+# 🛍️ Ashesi Market
 
 ![Backend CI](https://github.com/Kur-Malual17/Ashesi-market-website/workflows/Backend%20CI%2FCD/badge.svg)
 ![Frontend CI](https://github.com/Kur-Malual17/Ashesi-market-website/workflows/Frontend%20CI%2FCD/badge.svg)
 ![Full Stack CI](https://github.com/Kur-Malual17/Ashesi-market-website/workflows/Full%20Stack%20CI%2FCD/badge.svg)
 
-A modern, full-featured online marketplace platform built specifically for the Ashesi University community. Students can buy and sell products, leave reviews, and connect with each other through a secure and user-friendly interface.
+**A modern student-to-student marketplace platform built for the Ashesi University community.**
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Technology Stack](#technology-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Configuration](#configuration)
-- [Deployment](#deployment)
-- [CI/CD](#cicd)
-- [User Roles](#user-roles)
-- [Key Workflows](#key-workflows)
-- [API Documentation](#api-documentation)
-- [Contributing](#contributing)
-- [License](#license)
+Ashesi Market connects students who want to buy and sell products within the university community. Whether you're looking to sell textbooks, electronics, or other items, or searching for great deals from fellow students, Ashesi Market makes it easy and secure.
 
 ---
 
-## Overview
+## 🌐 Live Application
 
-Ashesi Market is a student-to-student marketplace that enables the Ashesi University community to:
-- List products for sale
-- Browse and purchase items from fellow students
-- Leave reviews on products and sellers
-- Manage orders and track sales
-- Communicate via WhatsApp integration
-
-The platform consists of a Django REST API backend and a vanilla JavaScript frontend, deployed separately for scalability and flexibility.
+- **Website**: [https://ashesi-market-website.vercel.app](https://ashesi-market-website.vercel.app)
+- **API Backend**: [https://ashesi-market-website-production.up.railway.app](https://ashesi-market-website-production.up.railway.app)
 
 ---
 
-## Features
+## ✨ Key Features
 
 ### For Buyers
-- **Browse Products**: Search and filter products by category, condition, and price
-- **Product Reviews**: Read reviews from verified buyers before purchasing
-- **Shopping Cart**: Add multiple items and checkout seamlessly
-- **Order Management**: Track purchases and order status
-- **Cancel Orders**: Cancel pending orders before seller approval
-- **Leave Reviews**: Rate and review products after purchase
-- **Seller Profiles**: View seller information and their other listings
+- 🔍 **Browse & Search** - Find products by category, condition, or search terms
+- 🛒 **Shopping Cart** - Add multiple items and checkout seamlessly
+- 📦 **Order Tracking** - Monitor your purchases from pending to completed
+- ⭐ **Reviews** - Rate and review products after purchase
+- 💬 **WhatsApp Integration** - Contact sellers directly via WhatsApp
 
 ### For Sellers
-- **List Products**: Create product listings with images, descriptions, and pricing
-- **Edit/Delete Products**: Full control over product listings
-- **Order Management**: Approve, confirm, or cancel orders
-- **Sales Dashboard**: Track earnings and order status
-- **Review Insights**: See product reviews to identify popular items
-- **WhatsApp Integration**: Contact buyers directly through WhatsApp
+- 📝 **List Products** - Create listings with images, descriptions, and pricing
+- 📊 **Sales Dashboard** - Manage orders and track earnings
+- ✅ **Order Management** - Approve, confirm, or cancel orders
+- 📱 **Buyer Communication** - Connect with buyers via WhatsApp
+- 🖼️ **Image Upload** - Add up to 5 images per product
 
-### Platform Features
-- **JWT Authentication**: Secure token-based authentication
-- **Image Storage**: Cloudflare R2 integration for fast, reliable image hosting
-- **Responsive Design**: Mobile-friendly interface with hamburger menu
-- **Real-time Updates**: Dynamic UI updates without page reloads
-- **Role-based Access**: Buyer, Seller, or Both roles with appropriate permissions
-- **Review System**: Product-specific reviews tied to verified purchases
+### For Everyone
+- 🔐 **Secure Authentication** - JWT-based login system
+- 👤 **User Profiles** - Manage your account and view ratings
+- 🎭 **Flexible Roles** - Be a buyer, seller, or both
+- 📱 **Responsive Design** - Works on desktop, tablet, and mobile
+- 🔔 **Real-time Updates** - Get instant feedback on actions
 
 ---
 
-## Technology Stack
+## 🚀 Getting Started
 
-### Backend
-- **Framework**: Django 4.2+ with Django REST Framework
-- **Database**: PostgreSQL (Railway) / SQLite (local development)
-- **Authentication**: JWT (djangorestframework-simplejwt)
-- **Image Storage**: Cloudflare R2 (S3-compatible)
-- **Server**: Gunicorn
-- **Deployment**: Railway
+### 1. Create an Account
+
+Visit [ashesi-market-website.vercel.app/register.html](https://ashesi-market-website.vercel.app/register.html) and sign up with:
+- Your Ashesi email address
+- Full name
+- Password (minimum 8 characters)
+- Choose your role: Buyer, Seller, or Both
+
+### 2. Complete Your Profile
+
+After registration:
+- Add your WhatsApp number for easy communication
+- Upload an ID image for verification
+- Add your year group and bio (optional)
+
+### 3. Start Using the Platform
+
+**As a Buyer:**
+1. Browse products on the homepage or products page
+2. Click on any product to view details
+3. Add items to your cart
+4. Proceed to checkout
+5. Wait for seller approval
+6. Complete the transaction
+7. Leave a review
+
+**As a Seller:**
+1. Click "Sell" or "+ Sell" button
+2. Fill in product details (title, description, price, etc.)
+3. Upload product images (up to 5)
+4. Submit your listing
+5. Manage orders from the "My Sales" section
+6. Approve orders and communicate with buyers
+7. Mark orders as completed
+
+---
+
+## 📱 User Roles Explained
+
+### 🛒 Buyer
+- **Can**: Browse products, make purchases, leave reviews
+- **Cannot**: List products for sale
+- **Best for**: Students looking to buy items
+
+### 💼 Seller
+- **Can**: List products, manage sales, view earnings
+- **Cannot**: Make purchases or add items to cart
+- **Best for**: Students who only want to sell
+
+### 🔄 Both
+- **Can**: Everything! Buy and sell products
+- **Full access** to all platform features
+- **Best for**: Active marketplace participants
+
+---
+
+## 🎯 How to Use Key Features
+
+### Searching for Products
+1. Use the search bar in the navigation
+2. Filter by category (Electronics, Books, Clothing, etc.)
+3. Filter by condition (New, Like New, Good, Fair)
+4. Sort by price or date listed
+
+### Making a Purchase
+1. Add items to cart
+2. Review cart contents
+3. Click "Checkout"
+4. Wait for seller approval (status: Pending)
+5. Once approved (status: Confirmed), arrange pickup
+6. After receiving item, mark as completed
+7. Leave a review to help other buyers
+
+### Selling a Product
+1. Click "+ Sell" button
+2. Enter product details:
+   - **Title**: Clear, descriptive name
+   - **Description**: Detailed information about the item
+   - **Price**: In Ghana Cedis (GH₵)
+   - **Category**: Select appropriate category
+   - **Condition**: Be honest about item condition
+   - **Quantity**: Number of items available
+3. Upload images (first image becomes the main image)
+4. Submit listing
+5. Manage orders from "My Sales" tab
+
+### Managing Orders (Sellers)
+1. Go to Orders → My Sales
+2. View pending orders
+3. Click "WhatsApp Buyer" to discuss details
+4. Click "Approve Order" to confirm
+5. After buyer receives item, click "Mark as Completed"
+6. View your earnings for each order
+
+### Leaving Reviews (Buyers)
+1. Go to Orders → My Purchases
+2. Find completed orders
+3. Click "Leave Review" button
+4. Rate 1-5 stars
+5. Add optional comment
+6. Submit review
+
+---
+
+## 🔒 Security & Privacy
+
+- **Secure Authentication**: Passwords are hashed and never stored in plain text
+- **JWT Tokens**: Secure session management
+- **HTTPS**: All data transmitted over secure connections
+- **Email Verification**: Ashesi email addresses only
+- **ID Verification**: Optional ID upload for trust
+- **No Payment Processing**: All transactions happen offline for safety
+
+---
+
+## 💡 Tips for Success
+
+### For Buyers
+- ✅ Check seller ratings and reviews before purchasing
+- ✅ Read product descriptions carefully
+- ✅ Contact seller via WhatsApp to ask questions
+- ✅ Inspect items before completing the transaction
+- ✅ Leave honest reviews to help the community
+
+### For Sellers
+- ✅ Take clear, well-lit photos of your items
+- ✅ Write detailed, honest descriptions
+- ✅ Price items competitively
+- ✅ Respond quickly to buyer inquiries
+- ✅ Be honest about item condition
+- ✅ Arrange safe meeting locations on campus
+
+---
+
+## 🛠️ Technology Stack
 
 ### Frontend
-- **Languages**: HTML5, CSS3, Vanilla JavaScript
-- **Styling**: Custom CSS with responsive design
-- **API Communication**: Fetch API with JWT tokens
-- **Deployment**: Vercel
+- **HTML5, CSS3, JavaScript** - Modern web technologies
+- **Responsive Design** - Works on all devices
+- **Deployed on**: Vercel
 
-### Additional Tools
-- **CORS**: django-cors-headers for cross-origin requests
-- **Image Processing**: Pillow for image handling
-- **Environment Variables**: python-decouple for configuration
+### Backend
+- **Django 4.2** - Python web framework
+- **Django REST Framework** - API development
+- **PostgreSQL** - Production database
+- **JWT Authentication** - Secure token-based auth
+- **Cloudflare R2** - Image storage
+- **Deployed on**: Railway
 
----
-
-## Project Structure
-
-```
-ashesi-market/
-├── ashesi_market_django/          # Backend (Django)
-│   ├── ashesi_market/             # Project settings
-│   │   ├── settings.py            # Configuration
-│   │   ├── urls.py                # URL routing
-│   │   └── wsgi.py                # WSGI application
-│   ├── marketplace/               # Main app
-│   │   ├── models.py              # Database models
-│   │   ├── views.py               # API endpoints
-│   │   ├── serializers.py         # Data serialization
-│   │   ├── urls.py                # App URLs
-│   │   ├── admin.py               # Admin interface
-│   │   └── migrations/            # Database migrations
-│   ├── media/                     # Local media files (dev)
-│   ├── static/                    # Static files
-│   ├── requirements.txt           # Python dependencies
-│   ├── Procfile                   # Railway deployment
-│   └── manage.py                  # Django management
-│
-├── ashesi_market_frontend/        # Frontend (Vanilla JS)
-│   ├── css/
-│   │   └── style.css              # Main stylesheet
-│   ├── js/
-│   │   ├── config.js              # API configuration
-│   │   ├── auth.js                # Authentication logic
-│   │   ├── api.js                 # API helper functions
-│   │   └── mobile-menu.js         # Mobile navigation
-│   ├── index.html                 # Homepage
-│   ├── login.html                 # Login page
-│   ├── register.html              # Registration page
-│   ├── products.html              # Product listing
-│   ├── product.html               # Product detail
-│   ├── sell.html                  # Create product
-│   ├── edit-product.html          # Edit product
-│   ├── cart.html                  # Shopping cart
-│   ├── orders.html                # Order management
-│   ├── profile.html               # User profile
-│   └── profile-edit.html          # Edit profile
-│
-└── README.md                      # This file
-```
+### CI/CD
+- **GitHub Actions** - Automated testing and deployment
+- **Automated Tests** - Backend tests with PostgreSQL
+- **Code Quality** - Linting and formatting checks
 
 ---
 
-## Getting Started
+## 📊 Order Status Guide
 
-### Prerequisites
-
-- Python 3.8+
-- Node.js (for local development server)
-- PostgreSQL (for production) or SQLite (for development)
-- Git
-
-### Backend Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd ashesi-market/ashesi_market_django
-   ```
-
-2. **Create virtual environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure environment variables**
-   
-   Create a `.env` file in `ashesi_market_django/`:
-   
-
-5. **Run migrations**
-   ```bash
-   python manage.py migrate
-   ```
-
-6. **Create superuser**
-   ```bash
-   python manage.py createsuperuser
-   ```
-
-7. **Load initial data (optional)**
-   ```bash
-   python manage.py loaddata marketplace/fixtures/categories.json
-   ```
-
-8. **Run development server**
-   ```bash
-   python manage.py runserver
-   ```
-
-   Backend will be available at `http://localhost:8000`
-
-### Frontend Setup
-
-1. **Navigate to frontend directory**
-   ```bash
-   cd ashesi_market_frontend
-   ```
-
-2. **Update API configuration**
-   
-   Edit `js/config.js`:
-   ```javascript
-   const API_BASE_URL = 'http://localhost:8000/api';
-   ```
-
-3. **Start local server**
-   
-   Using Python:
-   ```bash
-   python -m http.server 5500
-   ```
-   
-   Or using Node.js:
-   ```bash
-   npx http-server -p 5500
-   ```
-
-   Frontend will be available at `http://localhost:5500`
+| Status | Meaning | Next Steps |
+|--------|---------|------------|
+| **Pending** | Order placed, awaiting seller approval | Seller should review and approve/reject |
+| **Confirmed** | Seller approved, ready for pickup | Arrange meeting via WhatsApp |
+| **Completed** | Transaction finished successfully | Buyer can leave a review |
+| **Cancelled** | Order was cancelled | No further action needed |
 
 ---
 
-## Configuration
-
-### Backend Configuration
-
-Key settings in `ashesi_market/settings.py`:
-
-- **ALLOWED_HOSTS**: Add your domain names
-- **CORS_ALLOWED_ORIGINS**: Add frontend URLs
-- **CSRF_TRUSTED_ORIGINS**: Add frontend URLs
-- **DATABASE_URL**: PostgreSQL connection string
-- **R2 Settings**: Cloudflare R2 credentials
-
-### Frontend Configuration
-
-Update `js/config.js`:
-
-```javascript
-const API_BASE_URL = 'https://your-backend-url.railway.app/api';
-```
-
----
-
-## Deployment
-
-### Backend Deployment (Railway)
-
-1. **Create Railway project**
-   - Connect GitHub repository
-   - Add PostgreSQL database
-
-
-3. **Deploy**
-   - Railway auto-deploys on git push
-   - Run migrations via Railway CLI or admin panel
-
-### Frontend Deployment (Vercel)
-
-1. **Create Vercel project**
-   - Import from GitHub
-   - Set root directory to `ashesi_market_frontend`
-
-2. **Configure build settings**
-   - Framework Preset: Other
-   - Build Command: (leave empty)
-   - Output Directory: (leave empty)
-
-3. **Set environment variables**
-   ```
-   API_BASE_URL=https://your-backend.railway.app/api
-   ```
-
-4. **Deploy**
-   - Vercel auto-deploys on git push
-
----
-
-## CI/CD
-
-This project uses GitHub Actions for continuous integration and deployment.
-
-### Automated Workflows
-
-#### Backend CI/CD
-- **Triggers:** Push/PR to `main` or `develop` with backend changes
-- **Actions:**
-  - Runs Python linting (flake8)
-  - Checks code formatting (black, isort)
-  - Runs Django tests with PostgreSQL
-  - Checks for missing migrations
-  - Auto-deploys to Railway on push to `main`
-
-#### Frontend CI/CD
-- **Triggers:** Push/PR to `main` or `develop` with frontend changes
-- **Actions:**
-  - Validates HTML files
-  - Checks JavaScript syntax
-  - Validates CSS files
-  - Scans for security issues
-  - Auto-deploys to Vercel on push to `main`
-
-#### Full Stack Integration
-- **Triggers:** Push/PR to `main`
-- **Actions:**
-  - Detects changed components
-  - Runs integration tests
-  - Provides deployment status summary
-
-### Running Tests Locally
-
-**Backend:**
-```bash
-cd ashesi_market_django
-pip install -r requirements.txt
-pip install flake8 black isort
-python manage.py test
-```
-
-**Linting:**
-```bash
-flake8 .
-black --check .
-isort --check-only .
-```
-
-**Auto-format:**
-```bash
-black .
-isort .
-```
-
-### Viewing CI/CD Status
-- Check the **Actions** tab in GitHub repository
-- View workflow runs and logs
-- Monitor deployment status in Railway and Vercel dashboards
-
-For detailed CI/CD documentation, see [.github/workflows/README.md](.github/workflows/README.md)
-
----
-
-## User Roles
-
-### Buyer
-- Browse and search products
-- Add items to cart
-- Place orders
-- Leave reviews on purchased items
-- View order history
-
-### Seller
-- List products for sale
-- Edit/delete listings
-- Manage orders (approve, confirm, complete)
-- View sales dashboard
-- See product reviews
-
-### Both
-- All buyer and seller capabilities
-- Switch between buying and selling seamlessly
-
----
-
-## Key Workflows
-
-### Product Purchase Flow
-
-1. **Browse Products**
-   - User visits homepage or products page
-   - Filters by category, condition, or search
-
-2. **View Product Details**
-   - Click on product to see full details
-   - Read product reviews
-   - View seller profile
-
-3. **Add to Cart**
-   - Select quantity
-   - Click "Add to Cart"
-
-4. **Checkout**
-   - Review cart items
-   - Click "Checkout"
-   - Order created with status "pending"
-
-5. **Order Processing**
-   - Seller receives order notification
-   - Seller approves order (status: "confirmed")
-   - Seller marks as completed (status: "completed")
-
-6. **Review**
-   - Buyer leaves review and rating
-   - Review appears on product page
-
-### Product Listing Flow
-
-1. **Create Listing**
-   - Seller clicks "+ Sell"
-   - Fills in product details
-   - Uploads images (up to 5)
-   - Submits listing
-
-2. **Manage Listing**
-   - View on profile page
-   - Edit details or images
-   - Delete if no longer available
-
-3. **Receive Orders**
-   - View in "My Sales" tab
-   - Approve or reject orders
-   - Contact buyer via WhatsApp
-
-4. **Complete Sale**
-   - Mark order as completed
-   - View buyer's review
-   - Track earnings
-
----
-
-## API Documentation
-
-### Authentication Endpoints
-
-
-
-
-## Database Schema
-
-### Key Models
-
-**User**
-- Custom user model extending Django's AbstractUser
-- Fields: email, name, phone, year_group, bio, role, avg_rating
-- Roles: buyer, seller, both
-
-**Product**
-- Fields: title, description, price, quantity, condition, location
-- Relations: seller (User), category (Category)
-- Properties: avg_rating, review_count
-
-**Order**
-- Fields: buyer, total_amount, status, created_at
-- Status: pending, confirmed, completed, cancelled
-- Relations: items (OrderItem)
-
-**OrderItem**
-- Fields: product, seller, quantity, unit_price
-- Relations: order (Order), review (Review)
-
-**Review**
-- Fields: rating (1-5), comment, created_at
-- Relations: order_item, reviewer, seller
-- One review per order item (verified purchases only)
-
----
-
-## Security Features
-
-- JWT token authentication
-- Password hashing with Django's built-in system
-- CSRF protection for admin panel
-- CORS configuration for cross-origin requests
-- Permission-based access control
-- Verified purchase reviews only
-- Secure file upload validation
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Coding Standards
-
-- Follow PEP 8 for Python code
-- Use meaningful variable and function names
-- Add comments for complex logic
-- Write docstrings for functions and classes
-- Test thoroughly before submitting PR
-
----
-
-## Troubleshooting
+## 🤝 Support & Contact
+
+### Need Help?
+- **Technical Issues**: Check browser console (F12) for errors
+- **Account Issues**: Contact via WhatsApp (see seller/buyer profile)
+- **Feature Requests**: Open an issue on GitHub
 
 ### Common Issues
 
-**Backend won't start**
-- Check Python version (3.8+)
-- Verify all dependencies installed
-- Check DATABASE_URL is correct
-- Run migrations: `python manage.py migrate`
+**Can't log in?**
+- Ensure you're using your registered email
+- Check password (case-sensitive)
+- Clear browser cache and try again
 
-**Frontend can't connect to backend**
-- Verify API_BASE_URL in config.js
-- Check CORS settings in Django
-- Ensure backend is running
-- Check browser console for errors
+**Images not uploading?**
+- Maximum file size: 3MB per image
+- Supported formats: JPG, PNG, WebP
+- Maximum 5 images per product
 
-**Images not uploading**
-- Verify R2 credentials in environment variables
-- Check R2 bucket permissions
-- Ensure CORS policy configured on R2
-- Check file size limits (3MB max)
-
-**Authentication errors**
-- Clear localStorage and try logging in again
-- Check JWT token expiration (60 minutes)
-- Verify credentials are correct
+**Orders not showing?**
+- Refresh the page
+- Check your user role (buyers see purchases, sellers see sales)
+- Ensure you're logged in
 
 ---
 
-## License
+## 📈 Project Statistics
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
-## Acknowledgments
-
-- Built for the Ashesi University community
-- Inspired by modern e-commerce platforms
-- Uses open-source technologies and frameworks
+- **Built for**: Ashesi University Community
+- **User Roles**: 3 (Buyer, Seller, Both)
+- **Product Categories**: 10+
+- **Maximum Images per Product**: 5
+- **Maximum File Size**: 3MB per image
+- **Supported Payment**: Offline (cash, mobile money)
 
 ---
 
-## Contact
+## 🎓 About Ashesi University
 
-For questions, issues, or contributions, please open an issue on GitHub or contact the development team.
-
----
-
-## Roadmap
-
-### Planned Features
-
-- Email notifications for orders
-- Advanced search with filters
-- Product categories with icons
-- Wishlist functionality
-- Seller verification system
-- Payment integration
-- Mobile app (React Native)
-- Admin analytics dashboard
-- Bulk product upload
-- Product recommendations
+Ashesi Market is built specifically for the Ashesi University community. Ashesi University is a private, not-for-profit university in Ghana that educates ethical, entrepreneurial leaders in Africa.
 
 ---
 
-**Happy Trading!**
+## 📝 License
+
+This project is built for educational purposes as part of the Ashesi University curriculum.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Ashesi University** - For providing the educational environment
+- **Django Community** - For the excellent web framework
+- **Vercel & Railway** - For hosting services
+- **All Contributors** - For making this project possible
+
+---
+
+## 🔗 Quick Links
+
+- [Live Website](https://ashesi-market-website.vercel.app)
+- [API Documentation](https://ashesi-market-website-production.up.railway.app/api/)
+- [GitHub Repository](https://github.com/Kur-Malual17/Ashesi-market-website)
+- [Report an Issue](https://github.com/Kur-Malual17/Ashesi-market-website/issues)
+
+---
+
+**Made with ❤️ for the Ashesi University Community**
+
+*Last Updated: April 2026*
