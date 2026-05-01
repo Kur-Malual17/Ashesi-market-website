@@ -109,26 +109,6 @@ if 'DATABASE_URL' in os.environ:
         conn_max_age=600,
         conn_health_checks=True,
     )
-    # Optional: Add table prefix to avoid conflicts with other apps
-    # DATABASES['default']['OPTIONS'] = {
-    #     'options': '-c search_path=ashesi_market,public'
-    # }
-
-# MySQL Configuration (uncomment when mysqlclient is installed)
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': config('DB_NAME', default='ashesi_market'),
-#         'USER': config('DB_USER', default='root'),
-#         'PASSWORD': config('DB_PASSWORD', default=''),
-#         'HOST': config('DB_HOST', default='localhost'),
-#         'PORT': config('DB_PORT', default='3306'),
-#         'OPTIONS': {
-#             'charset': 'utf8mb4',
-#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-#         },
-#     }
-# }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -191,8 +171,8 @@ if R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
     MEDIA_URL = f'{R2_CUSTOM_DOMAIN}/media/'
     MEDIA_ROOT = None  # Not used with S3 storage
     
-    print(f"✅ R2 Storage configured: {R2_BUCKET_NAME}")
-    print(f"✅ Media URL: {MEDIA_URL}")
+    print(f" R2 Storage configured: {R2_BUCKET_NAME}")
+    print(f" Media URL: {MEDIA_URL}")
 else:
     # Fallback to local storage
     MEDIA_URL = '/media/'
