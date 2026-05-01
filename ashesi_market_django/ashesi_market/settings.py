@@ -149,17 +149,8 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# WhiteNoise configuration for serving static files in production
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
-
-# Use R2 for media files if configured
+# Storage configuration (Django 4.2+ style)
+# Use R2 for media files if configured, otherwise use local storage
 if R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
     # AWS S3 settings (R2 is S3-compatible)
     AWS_ACCESS_KEY_ID = R2_ACCESS_KEY_ID
@@ -175,19 +166,37 @@ if R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
     }
     AWS_LOCATION = 'media'
     
-    # Use R2 for media storage
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    
     # Media URL uses custom domain
     MEDIA_URL = f'{R2_CUSTOM_DOMAIN}/media/'
     MEDIA_ROOT = None  # Not used with S3 storage
     
-    print(f" R2 Storage configured: {R2_BUCKET_NAME}")
-    print(f" Media URL: {MEDIA_URL}")
+    # Configure storages with R2 for media and WhiteNoise for static
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+    
+    print(f"✅ R2 Storage configured: {R2_BUCKET_NAME}")
+    print(f"✅ Media URL: {MEDIA_URL}")
 else:
-    # Fallback to local storage
+    # Fallback to local storage for media
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
+    
+    # Configure storages with local storage for media and WhiteNoise for static
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+    
     print("⚠️ Using local media storage (R2 not configured)")
 
 # Email Configuration
