@@ -28,20 +28,20 @@ jobs:
         for file in js/*.js; do
           if [ -f "$file" ]; then
             echo "Checking $file..."
-            node --check "$file" && echo "✅ $file is valid" || echo "❌ $file has errors"
+            node --check "$file" && echo " $file is valid" || echo "❌ $file has errors"
           fi
         done
-        echo "✅ JavaScript syntax check complete"
+        echo " JavaScript syntax check complete"
     
     - name: Check HTML files exist
       working-directory: ./ashesi_market_frontend
       run: |
         echo "Checking HTML files..."
         if ls *.html 1> /dev/null 2>&1; then
-          echo "✅ HTML files found"
+          echo " HTML files found"
           ls -la *.html | head -10
         else
-          echo "⚠️ No HTML files found"
+          echo " No HTML files found"
         fi
     
     - name: Check CSS files exist
@@ -52,7 +52,7 @@ jobs:
           echo "✅ CSS files found"
           ls -la css/*.css
         else
-          echo "⚠️ No CSS files found"
+          echo " No CSS files found"
         fi
 
   security:

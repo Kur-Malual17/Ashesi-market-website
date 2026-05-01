@@ -100,6 +100,6 @@ jobs:
     
     - name: Deploy to Railway
       run: |
-        echo "✅ Railway auto-deploys from GitHub"
+        echo " Railway auto-deploys from GitHub"
         echo "Check your Railway dashboard for deployment status"
         echo "Railway will automatically deploy when changes are pushed to main branch"

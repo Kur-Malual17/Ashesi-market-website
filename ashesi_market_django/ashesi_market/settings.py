@@ -180,8 +180,8 @@ if R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
         },
     }
     
-    print(f"✅ R2 Storage configured: {R2_BUCKET_NAME}")
-    print(f"✅ Media URL: {MEDIA_URL}")
+    print(f" R2 Storage configured: {R2_BUCKET_NAME}")
+    print(f" Media URL: {MEDIA_URL}")
 else:
     # Fallback to local storage for media
     MEDIA_URL = '/media/'

@@ -52,14 +52,14 @@ jobs:
     steps:
     - name: Deployment Summary
       run: |
-        echo "🚀 Deployment Summary"
+        echo "Deployment Summary"
         echo "===================="
         echo ""
-        echo "✅ Backend - Railway will auto-deploy"
-        echo "   📍 https://ashesi-market-website-production.up.railway.app"
+        echo " Backend - Railway will auto-deploy"
+        echo "    https://ashesi-market-website-production.up.railway.app"
         echo ""
-        echo "✅ Frontend - Vercel will auto-deploy"
-        echo "   📍 https://ashesi-market-website.vercel.app"
+        echo " Frontend - Vercel will auto-deploy"
+        echo "    https://ashesi-market-website.vercel.app"
         echo ""
         echo "Monitor deployments:"
         echo "  - Railway: https://railway.app/dashboard"
