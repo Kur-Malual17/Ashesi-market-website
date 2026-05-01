@@ -10,14 +10,14 @@ Ashesi Market connects students who want to buy and sell products within the uni
 
 ---
 
-## 🌐 Live Application
+##Live Application
 
 - **Website**: [https://ashesi-market-website.vercel.app](https://ashesi-market-website.vercel.app)
 - **API Backend**: [https://ashesi-market-website-production.up.railway.app](https://ashesi-market-website-production.up.railway.app)
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 ### For Buyers
 - **Browse & Search** - Find products by category, condition, or search terms
@@ -81,26 +81,26 @@ After registration:
 
 ---
 
-## 📱 User Roles Explained
+## User Roles Explained
 
-### 🛒 Buyer
+### Buyer
 - **Can**: Browse products, make purchases, leave reviews
 - **Cannot**: List products for sale
 - **Best for**: Students looking to buy items
 
-### 💼 Seller
+### Seller
 - **Can**: List products, manage sales, view earnings
 - **Cannot**: Make purchases or add items to cart
 - **Best for**: Students who only want to sell
 
-### 🔄 Both
+### Both
 - **Can**: Everything! Buy and sell products
 - **Full access** to all platform features
 - **Best for**: Active marketplace participants
 
 ---
 
-## 🎯 How to Use Key Features
+## How to Use Key Features
 
 ### Searching for Products
 1. Use the search bar in the navigation
@@ -148,7 +148,7 @@ After registration:
 
 ---
 
-## 🔒 Security & Privacy
+## Security & Privacy
 
 - **Secure Authentication**: Passwords are hashed and never stored in plain text
 - **JWT Tokens**: Secure session management
@@ -159,7 +159,7 @@ After registration:
 
 ---
 
-## 💡 Tips for Success
+## Tips for Success
 
 ### For Buyers
 - Check seller ratings and reviews before purchasing
@@ -211,7 +211,7 @@ After registration:
 
 ---
 
-## 🤝 Support & Contact
+## Support & Contact
 
 ### Need Help?
 - **Technical Issues**: Check browser console (F12) for errors
@@ -248,13 +248,13 @@ After registration:
 
 ---
 
-## 🎓 About Ashesi University
+## About Ashesi University
 
 Ashesi Market is built specifically for the Ashesi University community. Ashesi University is a private, not-for-profit university in Ghana that educates ethical, entrepreneurial leaders in Africa.
 
 ---
 
-## 📝 License
+## License
 
 This project is built for educational purposes as part of the Ashesi University curriculum.
 
@@ -269,7 +269,7 @@ This project is built for educational purposes as part of the Ashesi University 
 
 ---
 
-## 🔗 Quick Links
+## Quick Links
 
 - [Live Website](https://ashesi-market-website.vercel.app)
 - [API Documentation](https://ashesi-market-website-production.up.railway.app/api/)
