@@ -25,6 +25,7 @@ wheels/
 .env
 db.sqlite3
 media/
-staticfiles/
+staticfiles/*
+!staticfiles/.gitkeep
 *.log
 .DS_Store
